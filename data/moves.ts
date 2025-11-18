@@ -14574,25 +14574,6 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		type: "Psychic",
 		contestType: "Clever",
 	},
-	championseyes: {
-		num: 940,
-		accuracy: 160,
-		basePower: 90,
-		category: "Special",
-		name: "Champion's eyes",
-		pp: 10,
-		priority: 0,
-		flags: { protect: 1, mirror: 1, metronome: 1 },
-		secondary: {
-			chance: 10,
-			boosts: {
-				spd: -1,
-			},
-		},
-		target: "normal",
-		type: "Psychic",
-		contestType: "Clever",
-	},
 	psychicfangs: {
 		num: 706,
 		accuracy: 100,
