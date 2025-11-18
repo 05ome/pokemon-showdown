@@ -4369,6 +4369,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	speedboost: {
 		onResidualOrder: 28,
 		onResidualSubOrder: 2,
+		
 		onResidual(pokemon) {
 			if (pokemon.activeTurns) {
 				this.boost({ spe: 1 });
@@ -4376,6 +4377,38 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		flags: {},
 		name: "Speed Boost",
+		rating: 4.5,
+		num: 3,
+	},
+	accelblaze: {
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		
+
+    onStart(pokemon) {
+        pokemon.__boostStep = 0;
+    },
+
+    onResidual(pokemon) {
+        if (!pokemon.activeTurns) return;
+
+        switch (pokemon.__boostStep) {
+            case 0:
+                this.boost({ spe: 1 }, pokemon); // Speed +
+                break;
+            case 1:
+                this.boost({ atk: 1 }, pokemon); // Attack +
+                break;
+            case 2:
+                this.boost({ def: -1 }, pokemon); // Defense -
+                break;
+        }
+
+        // Move to next step (0 → 1 → 2 → 0 → …)
+        pokemon.__boostStep = (pokemon.__boostStep + 1) % 3;
+    },
+		flags: {},
+		name: "Accel Blaze",
 		rating: 4.5,
 		num: 3,
 	},
