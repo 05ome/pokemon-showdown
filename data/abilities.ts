@@ -1091,7 +1091,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onWeather(target, source, effect) {
 			if (target.hasItem('utilityumbrella')) return;
-			if (effect.id === 'raindance' || effect.id === 'primordialsea') {
+			if (effect.id === 'raindance' || effect.id === 'primordialsea' || effect.id === 'eternalrain') {
 				this.heal(target.baseMaxhp / 8);
 			} else if (effect.id === 'sunnyday' || effect.id === 'desolateland') {
 				this.damage(target.baseMaxhp / 8, target, target);
@@ -1426,6 +1426,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 				if (pokemon.species.id !== 'castformrainy') forme = 'Castform-Rainy';
 				break;
 			case 'hail':
@@ -1870,7 +1871,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onResidualOrder: 5,
 		onResidualSubOrder: 3,
 		onResidual(pokemon) {
-			if (pokemon.status && ['raindance', 'primordialsea'].includes(pokemon.effectiveWeather())) {
+			if (pokemon.status && ['raindance', 'primordialsea','eternalrain'].includes(pokemon.effectiveWeather())) {
 				this.debug('hydration');
 				this.add('-activate', pokemon, 'ability: Hydration');
 				pokemon.cureStatus();
@@ -3704,7 +3705,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	raindish: {
 		onWeather(target, source, effect) {
 			if (target.hasItem('utilityumbrella')) return;
-			if (effect.id === 'raindance' || effect.id === 'primordialsea') {
+			if (effect.id === 'raindance' || effect.id === 'primordialsea' || effect.id === 'eternalrain') {
 				this.heal(target.baseMaxhp / 16);
 			}
 		},
@@ -4769,7 +4770,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	},
 	swiftswim: {
 		onModifySpe(spe, pokemon) {
-			if (['raindance', 'primordialsea'].includes(pokemon.effectiveWeather())) {
+			if (['raindance', 'primordialsea','eternalrain'].includes(pokemon.effectiveWeather())) {
 				return this.chainModify(2);
 			}
 		},

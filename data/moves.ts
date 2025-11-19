@@ -1525,7 +1525,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		priority: 0,
 		flags: { protect: 1, mirror: 1, metronome: 1, wind: 1 },
 		onModifyMove(move, pokemon, target) {
-			if (target && ['raindance', 'primordialsea'].includes(target.effectiveWeather())) {
+			if (target && ['raindance', 'primordialsea','eternalrain'].includes(target.effectiveWeather())) {
 				move.accuracy = true;
 			}
 		},
@@ -4826,7 +4826,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			}
 			this.add('-prepare', attacker, move.name);
 			this.boost({ spa: 1 }, attacker, attacker, move);
-			if (['raindance', 'primordialsea'].includes(attacker.effectiveWeather())) {
+			if (['raindance', 'primordialsea','eternalrain'].includes(attacker.effectiveWeather())) {
 				this.attrLastMove('[still]');
 				this.addMove('-anim', attacker, move.name, defender);
 				return;
@@ -9383,6 +9383,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			switch (target?.effectiveWeather()) {
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 				move.accuracy = true;
 				break;
 			case 'sunnyday':
@@ -12723,6 +12724,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 			case 'sandstorm':
 			case 'hail':
 			case 'snowscape':
@@ -12760,6 +12762,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 			case 'sandstorm':
 			case 'hail':
 			case 'snowscape':
@@ -16319,7 +16322,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		priority: 0,
 		flags: { protect: 1, mirror: 1, metronome: 1, wind: 1 },
 		onModifyMove(move, pokemon, target) {
-			if (target && ['raindance', 'primordialsea'].includes(target.effectiveWeather())) {
+			if (target && ['raindance', 'primordialsea','eternalrain'].includes(target.effectiveWeather())) {
 				move.accuracy = true;
 			}
 		},
@@ -17960,7 +17963,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			return null;
 		},
 		onBasePower(basePower, pokemon, target) {
-			const weakWeathers = ['raindance', 'primordialsea', 'sandstorm', 'hail', 'snowscape'];
+			const weakWeathers = ['raindance', 'primordialsea', 'sandstorm', 'hail', 'snowscape','eternalrain'];
 			if (weakWeathers.includes(pokemon.effectiveWeather())) {
 				this.debug('weakened by weather');
 				return this.chainModify(0.5);
@@ -17997,7 +18000,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			return null;
 		},
 		onBasePower(basePower, pokemon, target) {
-			const weakWeathers = ['raindance', 'primordialsea', 'sandstorm', 'hail', 'snowscape'];
+			const weakWeathers = ['raindance', 'primordialsea', 'sandstorm', 'hail', 'snowscape','eternalrain'];
 			if (weakWeathers.includes(pokemon.effectiveWeather())) {
 				this.debug('weakened by weather');
 				return this.chainModify(0.5);
@@ -19518,6 +19521,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 			case 'sandstorm':
 			case 'hail':
 			case 'snowscape':
@@ -20252,6 +20256,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			switch (target?.effectiveWeather()) {
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 				move.accuracy = true;
 				break;
 			case 'sunnyday':
@@ -21558,6 +21563,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 				move.type = 'Water';
 				break;
 			case 'sandstorm':
@@ -21577,6 +21583,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				break;
 			case 'raindance':
 			case 'primordialsea':
+			case 'eternalrain':
 				move.basePower *= 2;
 				break;
 			case 'sandstorm':
@@ -21720,7 +21727,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		priority: 0,
 		flags: { protect: 1, mirror: 1, metronome: 1, wind: 1 },
 		onModifyMove(move, pokemon, target) {
-			if (target && ['raindance', 'primordialsea'].includes(target.effectiveWeather())) {
+			if (target && ['raindance', 'primordialsea','eternalrain'].includes(target.effectiveWeather())) {
 				move.accuracy = true;
 			}
 		},
