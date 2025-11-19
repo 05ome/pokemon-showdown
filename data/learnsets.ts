@@ -19865,6 +19865,7 @@ export const Learnsets: import('../sim/dex-species').LearnsetDataTable = {
 	},
 	gyarados: {
 		learnset: {
+			eternalrain: ["9M","8M","7M"],
 			aquatail: ["9L32", "8L32", "7T", "7L30", "6T", "6L35", "5T", "5L35", "4T", "4L35"],
 			attract: ["8M", "7M", "7V", "6M", "5M", "4M", "3M"],
 			avalanche: ["9M", "8M", "4M"],

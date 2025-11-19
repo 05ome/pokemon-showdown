@@ -4752,6 +4752,21 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		zMove: { boost: { spa: 1 } },
 		contestType: "Clever",
 	},
+	championsgrace:{
+		num:941,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Champion's Grace",
+		onHit(pokemon, source) {
+			this.add('-message', `The Champion graces you with a free turn, Mewtwo Allows you to move.`);
+		},	
+		pp:10,
+		priority:4,
+		secondary: null,
+		target: "self",
+		type: "Psychic",
+	},
 	electroball: {
 		num: 486,
 		accuracy: 100,
@@ -14576,12 +14591,12 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 	},
 	championseyes: {
 		num: 940,
-		accuracy: 160,
-		basePower: 90,
+		accuracy: 100,
+		basePower: 160,
 		category: "Special",
-		name: "Champion's eyes",
+		name: "Champion's Eyes",
 		pp: 10,
-		priority: 0,
+		priority: 1,
 		flags: { protect: 1, mirror: 1, metronome: 1 },
 		secondary: {
 			chance: 10,
@@ -15241,6 +15256,23 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		secondary: null,
 		target: "randomNormal",
 		type: "Fire",
+	},
+	eternalrain:{
+		num: 950,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Eternal Rain",
+		pp: 5,
+		priority: 0,
+		flags: { metronome: 1 },
+		weather: 'EternalRain',
+		onHit(target, source) {
+        this.add('-message', `${source.name} summons Eternal Rain! The battlefield is drenched!`);
+    },
+		secondary: null,
+		target: "all",
+		type: "Water",
 	},
 	raindance: {
 		num: 240,

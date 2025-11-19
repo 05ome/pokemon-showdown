@@ -376,6 +376,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 3.5,
 		num: 210,
 	},
+
 	beadsofruin: {
 		onStart(pokemon) {
 			if (this.suppressingAbility(pokemon)) return;
@@ -2419,6 +2420,30 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4,
 		num: 98,
 	},
+	unsealed: {
+	onDamagePriority: -30,
+	onResidualOrder: 29,
+    name: "Unsealed",
+    shortDesc: "Prevents OHKO. If HP would drop to 0, HP becomes 1, Hoopa transforms into Unbound, changes ability to Magician, and restores full HP.",
+    onDamage(damage, target, source, effect) {
+			if (damage >= target.hp && effect && effect.effectType === 'Move') {
+				// this.add('-ability', target, 'Hoopa Form Switch');
+				this.add('-message',`Hoope has been unsealed.`)
+				return target.hp - 1;
+			}
+		},
+	onResidual(pokemon){
+		if(pokemon.hp <= pokemon.maxhp / 3){
+			const hoopaUnbound = this.dex.species.get('hoopaunbound');
+            pokemon.formeChange(hoopaUnbound);
+			pokemon.hp = pokemon.maxhp;
+            this.add('-heal', pokemon, pokemon.getHealth, '[from] ability: Unseal');
+			pokemon.setAbility('Magician')
+            return 0; 
+		}
+	}
+},
+
 	magician: {
 		onAfterMoveSecondarySelf(source, target, move) {
 			if (!move || source.switchFlag === true || !move.hitTargets || source.item || source.volatiles['gem'] ||
@@ -4383,30 +4408,28 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	accelblaze: {
 		onResidualOrder: 28,
 		onResidualSubOrder: 2,
-		
-
-    onStart(pokemon) {
+		onStart(pokemon) {
         pokemon.__boostStep = 0;
-    },
+    	},
+		
+		onResidual(pokemon) {
+			if (!pokemon.activeTurns) return;
 
-    onResidual(pokemon) {
-        if (!pokemon.activeTurns) return;
-
-        switch (pokemon.__boostStep) {
-            case 0:
-                this.boost({ spe: 1 }, pokemon); // Speed +
-                break;
-            case 1:
-                this.boost({ atk: 1 }, pokemon); // Attack +
-                break;
-            case 2:
-                this.boost({ def: -1 }, pokemon); // Defense -
-                break;
-        }
+        	switch (pokemon.__boostStep) {
+            	case 0:
+                	this.boost({ spe: 1 }, pokemon); // Speed +
+                	break;
+            	case 1:
+                	this.boost({ atk: 1 }, pokemon); // Attack +
+                	break;
+            	case 2:
+                	this.boost({ def: -1 }, pokemon); // Defense -
+                	break;
+        	}
 
         // Move to next step (0 → 1 → 2 → 0 → …)
-        pokemon.__boostStep = (pokemon.__boostStep + 1) % 3;
-    },
+        	pokemon.__boostStep = (pokemon.__boostStep + 1) % 3;
+    	},
 		flags: {},
 		name: "Accel Blaze",
 		rating: 4.5,
@@ -5018,6 +5041,18 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		flags: {},
 		name: "Tough Claws",
+		rating: 3.5,
+		num: 181,
+	},
+	zardclaws: {
+		onBasePowerPriority: 21,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.flags['contact']) {
+				return this.chainModify([6144, 4096]);
+			}
+		},
+		flags: {},
+		name: "Zard Claws",
 		rating: 3.5,
 		num: 181,
 	},

@@ -472,7 +472,38 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 	},
 
 	// weather is implemented here since it's so important to the game
-
+	eternalrain: {
+		name: 'EternalRain',
+		effectType: 'Weather',
+		duration: 30,
+		onWeatherModifyDamage(damage, attacker, defender, move) {
+			if (defender.hasItem('utilityumbrella')) return;
+			if (move.type === 'Water') {
+				this.debug('rain water boost');
+				return this.chainModify(1.5);
+			}
+			if (move.type === 'Fire') {
+				this.debug('rain fire suppress');
+				return this.chainModify(0.5);
+			}
+		},
+		onFieldStart(field, source, effect) {
+			if (effect?.effectType === 'Ability') {
+				if (this.gen <= 5) this.effectState.duration = 0;
+				this.add('-weather', 'EternalRain', '[from] ability: ' + effect.name, `[of] ${source}`);
+			} else {
+				this.add('-weather', 'EternalRain');
+			}
+		},
+		onFieldResidualOrder: 1,
+		onFieldResidual() {
+			this.add('-weather', 'EternalRain', '[upkeep]');
+			this.eachEvent('Weather');
+		},
+		onFieldEnd() {
+			this.add('-weather', 'none');
+		},
+	},
 	raindance: {
 		name: 'RainDance',
 		effectType: 'Weather',
