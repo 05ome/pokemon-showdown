@@ -490,14 +490,14 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		onFieldStart(field, source, effect) {
 			if (effect?.effectType === 'Ability') {
 				if (this.gen <= 5) this.effectState.duration = 0;
-				this.add('-weather', 'EternalRain', '[from] ability: ' + effect.name, `[of] ${source}`);
+				this.add('-weather', 'RainDance', '[from] ability: ' + effect.name, `[of] ${source}`);
 			} else {
-				this.add('-weather', 'EternalRain');
+				this.add('-weather', 'RainDance');
 			}
 		},
 		onFieldResidualOrder: 1,
 		onFieldResidual() {
-			this.add('-weather', 'EternalRain', '[upkeep]');
+			this.add('-weather', 'RainDance', '[upkeep]');
 			this.eachEvent('Weather');
 		},
 		onFieldEnd() {
