@@ -15267,7 +15267,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		priority: 0,
 		flags: { metronome: 1 },
 		weather: 'EternalRain',
-		onHit(target, source) {
+		onTryHit(target, source) {
         this.add('-message', `${source.name} summons Eternal Rain! The battlefield is drenched!`);
     },
 		secondary: null,
