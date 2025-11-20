@@ -6833,28 +6833,29 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
     		onResidualOrder: 27,
     		onResidualSubOrder: 5,
     		onResidual(field) {
-        		for (const mon of this.getAllActive()) {
-            		if (!mon.isGrounded()) continue;
+    			for (const mon of this.getAllActive()) {
+        			if (!mon.isGrounded()) continue;
 
-            		// --- PP Drop for non-Ghost types ---
-            		if (!mon.hasType('Ghost')) {
-                		const lastMove = mon.lastMove;
-                		if (lastMove) {
-                    		const moveSlot = mon.getMoveData(lastMove.id);
-                    		if (moveSlot && moveSlot.pp > 0) {
-                        		const lost = Math.min(3, moveSlot.pp);
-                        		moveSlot.pp -= lost;
-                        		this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
-                    		}
-                		}
-            		}
+       			 // --- PP Drop for non-Ghost types ---
+        			if (!mon.hasType('Ghost')) {
+            			const lastMove = mon.lastMove;
+            			if (lastMove) {
+                			const moveSlot = mon.getMoveData(lastMove.id);
+                			if (moveSlot && moveSlot.pp > 0) {
+                    			const lost = Math.min(3, moveSlot.pp);
+                    			moveSlot.pp -= lost;
+                    			this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
+                			}
+            			}
+        			}
 
-            		// --- Sleep damage ---
-            		if (mon.status === 'slp' && !mon.volatiles['curse'] && !mon.volatiles['nightmare']) {
-                		this.damage(mon.maxhp / 8, mon, null, 'Ghost Terrain');
-            		}
-        		}
-    		},
+			        // --- Sleep damage: ONLY 1/8 HP per turn, no stacking ---
+        			if (mon.status === 'slp' && !mon.volatiles['curse'] && !mon.volatiles['nightmare'] && !mon.volatiles['ghostTerrainSleepDamage']) {
+            			this.damage(mon.maxhp / 8, mon, null, 'Ghost Terrain');
+            			mon.addVolatile('ghostTerrainSleepDamage');
+        			}
+    			}
+			},
 
     		// --- 4,5,6) Modify moves ---
     		onModifyMove(move, pokemon, target) {

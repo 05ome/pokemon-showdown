@@ -1160,6 +1160,15 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4,
 		num: 226,
 	},
+	ghastlysurge: {
+		onStart(source){
+			this.field.setTerrain('ghostterrain');
+		},
+		flags:  {},
+		name: "Ghastly Surge",
+		rating: 4,
+		num: 941
+	},
 	electromorphosis: {
 		onDamagingHitOrder: 1,
 		onDamagingHit(damage, target, source, move) {
