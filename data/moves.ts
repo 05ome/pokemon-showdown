@@ -6808,6 +6808,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		basePower: 0,
 		category: "Status",
 		name: "Ghost Terrain",
+		pp: 10,
+		priority: 0,
+		flags: { nonsky: 1, metronome: 1 },
+		terrain: 'ghostterrain',
 		condition: {
     		effectType: 'Terrain',
     		duration: 5,
