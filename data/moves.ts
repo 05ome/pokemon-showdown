@@ -6802,6 +6802,118 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		zMove: { boost: { atk: 1, def: 1, spa: 1, spd: 1, spe: 1 } },
 		contestType: "Beautiful",
 	},
+	ghostterrain: {
+		num: 604,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Ghost Terrain",
+		condition: {
+    		effectType: 'Terrain',
+    		duration: 5,
+    		durationCallback(source, effect) {
+        		if (source?.hasItem('terrainextender')) return 8;
+        		return 5;
+    		},
+
+    		// --- 1) Boost Ghost-type moves by 30% ---
+    		onBasePowerPriority: 6,
+    		onBasePower(basePower, attacker, defender, move) {
+        		if (move.type === 'Ghost' && attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
+            		this.debug('Ghost Terrain boost');
+            		return this.chainModify([5325, 4096]); // 1.30×
+        		}
+    		},
+
+    		// --- 2) & 3) Residual effects: PP drop + sleep damage ---
+    		onResidualOrder: 27,
+    		onResidualSubOrder: 5,
+    		onResidual(field) {
+        		for (const mon of this.getAllActive()) {
+            		if (!mon.isGrounded()) continue;
+
+            		// --- PP Drop for non-Ghost types ---
+            		if (!mon.hasType('Ghost')) {
+                		const lastMove = mon.lastMove;
+                		if (lastMove) {
+                    		const moveSlot = mon.getMoveData(lastMove.id);
+                    		if (moveSlot && moveSlot.pp > 0) {
+                        		const lost = Math.min(3, moveSlot.pp);
+                        		moveSlot.pp -= lost;
+                        		this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
+                    		}
+                		}
+            		}
+
+            		// --- Sleep damage ---
+            		if (mon.status === 'slp' && !mon.volatiles['curse'] && !mon.volatiles['nightmare']) {
+                		this.damage(mon.maxhp / 8, mon, null, 'Ghost Terrain');
+            		}
+        		}
+    		},
+
+    		// --- 4,5,6) Modify moves ---
+    		onModifyMove(move, pokemon, target) {
+        		if (!pokemon.isGrounded()) return;
+
+        		// Ominous Wind / Silver Wind omniboost adjustments
+        		if (move.id === 'ominouswind' && move.secondaries) {
+            		for (const sec of move.secondaries) {
+                		if (sec.self && sec.boosts) sec.chance = 20;
+            		}
+        		}
+        		if (move.id === 'silverwind' && move.secondaries) {
+            		for (const sec of move.secondaries) {
+                		if (sec.self && sec.boosts) sec.chance = 5;
+            		}
+        		}	
+
+        		// Shadow Force & Phantom Force become 1-turn moves
+        		if (move.id === 'shadowforce' || move.id === 'phantomforce') {
+            		delete move.flags?.charge;
+            		move.breaksProtect = true;
+        		}
+
+        		// Nature Power → Shadow Ball
+        		if (move.id === 'naturepower') {
+            		move.type = 'Ghost';
+            		move.id = 'shadowball';
+            		move.name = 'Shadow Ball';
+        		}
+
+        		// Terrain Pulse → Ghost-type
+        		if (move.id === 'terrainpulse') {
+            		move.type = 'Ghost';
+            		move.basePower = 80;
+        		}
+
+        		// Camouflage & Mimicry → Ghost type
+        		if (move.id === 'camouflage' || move.id === 'mimicry') {
+            		move.onHit = (target) => {
+                		target.setType('Ghost');
+                		this.add('-start', target, 'typechange', 'Ghost', `[from] move: ${move.name}`);
+            		};
+        		}
+    		},
+
+    		// --- FIELD START / END MESSAGES ---
+    		onFieldStart(field, source, effect) {
+        		if (effect?.effectType === 'Ability') {
+            		this.add('-fieldstart', 'Ghost Terrain', '[from] ability: ' + effect.name, `[of] ${source}`);
+        		} else {
+            		this.add('-fieldstart', 'Ghost Terrain');
+        		}
+    		},
+    		onFieldEnd() {
+        		this.add('-fieldend', 'Ghost Terrain');
+    		},
+		},
+		secondary: null,
+		target: "all",
+		type: "Ghost",
+		zMove: { boost: { spa: 1 } },
+		contestType: "Clever",
+	},
 	gigadrain: {
 		num: 202,
 		accuracy: 100,
