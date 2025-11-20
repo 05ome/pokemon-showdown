@@ -6833,32 +6833,25 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
     		onResidualOrder: 27,
     		onResidualSubOrder: 5,
     		onResidual(field) {
-    			for (const mon of this.getAllActive()) {
-        			if (!mon.isGrounded()) continue;
+        		for (const mon of this.getAllActive()) {
+            		if (!mon.isGrounded()) continue;
 
-       			 // --- PP Drop for non-Ghost types ---
-        			if (!mon.hasType('Ghost')) {
-            			const lastMove = mon.lastMove;
-            			if (lastMove) {
-                			const moveSlot = mon.getMoveData(lastMove.id);
-                			if (moveSlot && moveSlot.pp > 0) {
-                    			const lost = Math.min(3, moveSlot.pp);
-                    			moveSlot.pp -= lost;
-                    			this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
-                			}
-            			}
-        			}
-
-			        // --- Sleep damage: ONLY 1/8 HP per turn, no stacking ---
-        			if (mon.status === 'slp' && !mon.volatiles['curse'] && !mon.volatiles['nightmare'] && !mon.volatiles['ghostTerrainSleepDamage']) {
-            			this.damage(mon.maxhp / 8, mon, null, 'Ghost Terrain');
-            			mon.addVolatile('ghostTerrainSleepDamage');
-        			}
-    			}
+            		// --- PP drop for non-Ghost types ---
+            		if (!mon.hasType('Ghost')) {
+                		const lastMove = mon.lastMove;
+                		if (lastMove) {
+                    		const moveSlot = mon.getMoveData(lastMove.id);
+                    		if (moveSlot && moveSlot.pp > 0) {
+                        		const lost = Math.min(3, moveSlot.pp);
+                        		moveSlot.pp -= lost;
+                        		this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
+                    		}
+                		}
+            		}
+				}
 			},
-
     		// --- 4,5,6) Modify moves ---
-    		onModifyMove(move, pokemon, target) {
+    		onModifyMove(move, pokemon, target){
         		if (!pokemon.isGrounded()) return;
 
         		// Ominous Wind / Silver Wind omniboost adjustments
@@ -6872,13 +6865,6 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
                 		if (sec.self && sec.boosts) sec.chance = 5;
             		}
         		}	
-
-        		// Shadow Force & Phantom Force become 1-turn moves
-        		if (move.id === 'shadowforce' || move.id === 'phantomforce') {
-            		delete move.flags?.charge;
-            		move.breaksProtect = true;
-        		}
-
         		// Nature Power → Shadow Ball
         		if (move.id === 'naturepower') {
             		move.type = 'Ghost';
@@ -13938,6 +13924,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		flags: { contact: 1, charge: 1, mirror: 1, metronome: 1, nosleeptalk: 1, noassist: 1, failinstruct: 1 },
 		breaksProtect: true,
 		onTryMove(attacker, defender, move) {
+			if (attacker.isGrounded() && attacker.side.field.isTerrain('ghost')) {
+            	// Ghost Terrain: skip charge turn
+            	return true; // execute immediately
+        	}
 			if (attacker.removeVolatile(move.id)) {
 				return;
 			}
@@ -16849,6 +16839,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		flags: { contact: 1, charge: 1, mirror: 1, metronome: 1, nosleeptalk: 1, noassist: 1, failinstruct: 1 },
 		breaksProtect: true,
 		onTryMove(attacker, defender, move) {
+			if (attacker.isGrounded() && attacker.side.field.isTerrain('ghost')) {
+            	// Ghost Terrain: skip charge turn
+            	return true; // execute immediately
+        	}
 			if (attacker.removeVolatile(move.id)) {
 				return;
 			}
