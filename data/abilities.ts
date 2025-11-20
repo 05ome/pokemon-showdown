@@ -1064,6 +1064,16 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4,
 		num: 2,
 	},
+	eternaldrought:{
+		onStart(source) {
+			if (source.species.id === 'groudon' && source.item === 'redorb') return;
+			this.field.setWeather('sunnyday');
+		},
+		flags: {},
+		name: "Eternal Drought",
+		rating: 4,
+		num: 943,
+	},
 	drought: {
 		onStart(source) {
 			if (source.species.id === 'groudon' && source.item === 'redorb') return;

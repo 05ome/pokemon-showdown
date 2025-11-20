@@ -582,6 +582,9 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			if (source?.hasItem('heatrock')) {
 				return 8;
 			}
+			else if(source?.hasAbility('eternaldrought')){
+				return 30;
+			}
 			return 5;
 		},
 		onWeatherModifyDamage(damage, attacker, defender, move) {
