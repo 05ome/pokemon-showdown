@@ -6813,91 +6813,92 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		flags: { nonsky: 1, metronome: 1 },
 		terrain: 'ghostterrain',
 		condition: {
-    		effectType: 'Terrain',
-    		duration: 5,
-    		durationCallback(source, effect) {
-        		if (source?.hasItem('terrainextender')) return 8;
-        		return 5;
-    		},
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) return 8;
+				else if(source?.hasAbility('ghastlysurge')) return 30;
+				return 5;
+			},
 
-    		// --- 1) Boost Ghost-type moves by 30% ---
-    		onBasePowerPriority: 6,
-    		onBasePower(basePower, attacker, defender, move) {
-        		if (move.type === 'Ghost' && attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
-            		this.debug('Ghost Terrain boost');
-            		return this.chainModify([5325, 4096]); // 1.30×
-        		}
-    		},
-
-    		// --- 2) & 3) Residual effects: PP drop + sleep damage ---
-    		onResidualOrder: 27,
-    		onResidualSubOrder: 5,
-    		onResidual(field) {
-        		for (const mon of this.getAllActive()) {
-            		if (!mon.isGrounded()) continue;
-
-            		// --- PP drop for non-Ghost types ---
-            		if (!mon.hasType('Ghost')) {
-                		const lastMove = mon.lastMove;
-                		if (lastMove) {
-                    		const moveSlot = mon.getMoveData(lastMove.id);
-                    		if (moveSlot && moveSlot.pp > 0) {
-                        		const lost = Math.min(3, moveSlot.pp);
-                        		moveSlot.pp -= lost;
-                        		this.add('-activate', mon, 'Ghost Terrain', `-PP ${lastMove.name}`, lost);
-                    		}
-                		}
-            		}
+			// --- 1) Boost Ghost-type moves by 30% ---
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+				if (move.type === 'Ghost' && attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
+					// this.debug('Ghost Terrain boost');
+					return this.chainModify([5325, 4096]); // 1.30x
 				}
 			},
-    		// --- 4,5,6) Modify moves ---
-    		onModifyMove(move, pokemon, target){
-        		if (!pokemon.isGrounded()) return;
 
-        		// Ominous Wind / Silver Wind omniboost adjustments
-        		if (move.id === 'ominouswind' && move.secondaries) {
-            		for (const sec of move.secondaries) {
-                		if (sec.self && sec.boosts) sec.chance = 20;
-            		}
-        		}
-        		if (move.id === 'silverwind' && move.secondaries) {
-            		for (const sec of move.secondaries) {
-                		if (sec.self && sec.boosts) sec.chance = 5;
-            		}
-        		}	
-        		// Nature Power → Shadow Ball
-        		if (move.id === 'naturepower') {
-            		move.type = 'Ghost';
-            		move.id = 'shadowball';
-            		move.name = 'Shadow Ball';
-        		}
+			// --- 2) PP Drop Logic (Runs immediately after a move) ---
+			onAfterMove(pokemon, target, move) {
+				if (!pokemon.isGrounded() || pokemon.hasType('Ghost')) return;
+				if (move.isMax || move.isZ) return; // Don't drain PP for Z/Max moves
 
-        		// Terrain Pulse → Ghost-type
-        		if (move.id === 'terrainpulse') {
-            		move.type = 'Ghost';
-            		move.basePower = 80;
-        		}
+				if (move.id && move.pp > 0) {
+					const lost = Math.min(2, move.pp);
+					pokemon.deductPP(move.id, lost);
 
-        		// Camouflage & Mimicry → Ghost type
-        		if (move.id === 'camouflage' || move.id === 'mimicry') {
-            		move.onHit = (target) => {
-                		target.setType('Ghost');
-                		this.add('-start', target, 'typechange', 'Ghost', `[from] move: ${move.name}`);
-            		};
-        		}
-    		},
+					// Visual: Triggers the "Spite" animation
+					this.add('-activate', pokemon, 'move: Spite', move.name, lost);
+					this.add('-message', `${pokemon.name} lost PP due to the Ghost Terrain!`);
+				}
+			},
 
-    		// --- FIELD START / END MESSAGES ---
-    		onFieldStart(field, source, effect) {
-        		if (effect?.effectType === 'Ability') {
-            		this.add('-fieldstart', 'Ghost Terrain', '[from] ability: ' + effect.name, `[of] ${source}`);
-        		} else {
-            		this.add('-fieldstart', 'Ghost Terrain');
-        		}
-    		},
-    		onFieldEnd() {
-        		this.add('-fieldend', 'Ghost Terrain');
-    		},
+			// --- 3) Sleep Damage (Runs at end of turn) ---
+			onResidualOrder: 26,
+			onResidualSubOrder: 1,
+			onResidual(pokemon) {
+				// 🛑 FIXED: No loop here! Showdown runs this function once for each pokemon automatically.
+				
+				if (!pokemon.isGrounded() || pokemon.fainted) return;
+
+				// Sleep damage: 1/8th HP
+				if (pokemon.status === 'slp' && !pokemon.volatiles['curse'] && !pokemon.volatiles['nightmare']) {
+					this.damage(pokemon.baseMaxhp / 8, pokemon, null, 'Ghost Terrain');
+					this.add('-message', `${pokemon.name} lost HP due to the Ghost Terrain!`)
+				}
+			},
+
+			// --- 4) Modify Moves (Camouflage, etc) ---
+			onModifyMove(move, pokemon, target) {
+				if (!pokemon.isGrounded()) return;
+
+				// Ominous Wind / Silver Wind adjustments
+				if (move.id === 'ominouswind' && move.secondaries) {
+					for (const sec of move.secondaries) {
+						if (sec.self && sec.boosts) sec.chance = 30;
+					}
+				}
+				if (move.id === 'silverwind' && move.secondaries) {
+					for (const sec of move.secondaries) {
+						if (sec.self && sec.boosts) sec.chance = 5;
+					}
+				}
+
+				// Camouflage & Mimicry -> Ghost type
+				if (move.id === 'camouflage' || move.id === 'mimicry') {
+					move.onHit = (t) => {
+						t.setType('Ghost');
+						this.add('-start', t, 'typechange', 'Ghost', `[from] move: ${move.name}`);
+					};
+				}
+			},
+
+			// --- Field Start/End Messages ---
+			onFieldStart(field, source, effect) {
+				if (effect?.effectType === 'Ability') {
+					this.add('-fieldstart', 'Ghost Terrain', '[from] ability: ' + effect.name, `[of] ${source}`);
+				} else {
+					this.add('-fieldstart', 'Ghost Terrain');
+				}
+				if(source?.hasAbility('ghastlysurge')){
+					this.add('-message', 'Ghost Terrain has been setup for eternity, The Haunting ensues!')
+				}
+			},
+			onFieldEnd() {
+				this.add('-fieldend', 'Ghost Terrain');
+			},
 		},
 		secondary: null,
 		target: "all",
@@ -13193,6 +13194,8 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				move = 'moonblast';
 			} else if (this.field.isTerrain('psychicterrain')) {
 				move = 'psychic';
+			} else if (this.field.isTerrain('ghostterrain')){
+				move = 'shadowball'
 			}
 			this.actions.useMove(move, pokemon, { target });
 			return null;
@@ -13924,7 +13927,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		flags: { contact: 1, charge: 1, mirror: 1, metronome: 1, nosleeptalk: 1, noassist: 1, failinstruct: 1 },
 		breaksProtect: true,
 		onTryMove(attacker, defender, move) {
-			if (attacker.isGrounded() && attacker.side.field.isTerrain('ghost')) {
+			if (attacker.isGrounded() && this.field.isTerrain('ghostterrain')) {
             	// Ghost Terrain: skip charge turn
             	return true; // execute immediately
         	}
@@ -16839,7 +16842,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		flags: { contact: 1, charge: 1, mirror: 1, metronome: 1, nosleeptalk: 1, noassist: 1, failinstruct: 1 },
 		breaksProtect: true,
 		onTryMove(attacker, defender, move) {
-			if (attacker.isGrounded() && attacker.side.field.isTerrain('ghost')) {
+			if (attacker.isGrounded() && this.field.isTerrain('ghostterrain')) {
             	// Ghost Terrain: skip charge turn
             	return true; // execute immediately
         	}
@@ -20200,6 +20203,9 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			case 'psychicterrain':
 				move.type = 'Psychic';
 				break;
+			case 'ghostterrain':
+				move.type = 'Ghost';
+				break;
 			}
 		},
 		onModifyMove(move, pokemon) {
@@ -20895,6 +20901,9 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					this.add('-activate', source, 'ability: Persistent', '[move] Trick Room');
 					return 7;
 				}
+				if (source?.hasMove('lunarblessing')){
+					return 30;
+				}
 				return 5;
 			},
 			onFieldStart(target, source) {
@@ -20902,6 +20911,9 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					this.add('-fieldstart', 'move: Trick Room', `[of] ${source}`, '[persistent]');
 				} else {
 					this.add('-fieldstart', 'move: Trick Room', `[of] ${source}`);
+				}
+				if(source?.hasMove('lunarblessing')){
+					this.add('-message', `${source.name}'s beauty: Lo Behold Trick Room has been setup for eternity. With this blessing those unfortunate to be born with slow legs can have their dreams come true.`)
 				}
 			},
 			onFieldRestart(target, source) {

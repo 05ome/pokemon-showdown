@@ -609,6 +609,9 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			} else {
 				this.add('-weather', 'SunnyDay');
 			}
+			if(source?.hasAbility('eternaldrought')){
+				this.add('-message', `${source.name}'s Eternal Drought brings in eternal sunlight.`)
+			}
 		},
 		onImmunity(type, pokemon) {
 			if (pokemon.hasItem('utilityumbrella')) return;
