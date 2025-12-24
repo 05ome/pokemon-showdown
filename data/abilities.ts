@@ -4425,7 +4425,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4.5,
 		num: 3,
 	},
-	accelblaze: {
+	blazeboost: {
 		onResidualOrder: 28,
 		onResidualSubOrder: 2,
 		onStart(pokemon) {
@@ -4451,7 +4451,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
         	pokemon.__boostStep = (pokemon.__boostStep + 1) % 3;
     	},
 		flags: {},
-		name: "Accel Blaze",
+		name: "Blaze Boost",
 		rating: 4.5,
 		num: 3,
 	},

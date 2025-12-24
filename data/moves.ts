@@ -6803,7 +6803,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		contestType: "Beautiful",
 	},
 	ghostterrain: {
-		num: 604,
+		num: 943,
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
@@ -6848,9 +6848,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			// --- 3) Sleep Damage (Runs at end of turn) ---
 			onResidualOrder: 26,
 			onResidualSubOrder: 1,
-			onResidual(pokemon) {
-				// 🛑 FIXED: No loop here! Showdown runs this function once for each pokemon automatically.
-				
+			onResidual(pokemon) {				
 				if (!pokemon.isGrounded() || pokemon.fainted) return;
 
 				// Sleep damage: 1/8th HP
