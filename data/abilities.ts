@@ -312,6 +312,15 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 1,
 		num: 188,
 	},
+	auramaster:{
+		onModifyPriority(priority, pokemon, target, move) {
+			if (move?.type === 'Fighting' || move?.type === "Steel") return priority + 1;
+		},
+		flags: {},
+		name: "Aura Master",
+		rating: 4.5,
+		num: 902,
+	},
 	baddreams: {
 		onResidualOrder: 28,
 		onResidualSubOrder: 2,
@@ -3949,6 +3958,32 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Sand Rush",
 		rating: 3,
 		num: 146,
+	},
+	sandsovereign:  {
+		onStart(source) {
+			this.field.setWeather('sandstorm');
+		},
+		onModifySpe(spe, pokemon) {
+			if (this.field.isWeather('sandstorm')) {
+				return this.chainModify(2);
+			}
+		},
+		onImmunity(type, pokemon) {
+			if (type === 'sandstorm') return false;
+		},
+		onBasePowerPriority: 21,
+		onBasePower(basePower, attacker, defender, move) {
+			if (this.field.isWeather('sandstorm')) {
+				if (move.type === 'Rock' || move.type === 'Ground' || move.type === 'Steel') {
+					this.debug('Sand Force boost');
+					return this.chainModify([5325, 4096]);
+				}
+			}
+		},
+		flags: {},
+		name: "Sand Sovereign",
+		rating: 4,
+		num: 901,
 	},
 	sandspit: {
 		onDamagingHit(damage, target, source, move) {

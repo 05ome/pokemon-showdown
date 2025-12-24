@@ -14708,7 +14708,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		name: "Champion's Eyes",
 		pp: 10,
 		priority: 1,
-		flags: { protect: 1, mirror: 1, metronome: 1 },
+		flags: { protect: 1, mirror: 1 },
 		secondary: {
 			chance: 10,
 			boosts: {

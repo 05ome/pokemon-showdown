@@ -116,6 +116,10 @@ export const AbilitiesText: { [id: IDEntry]: AbilityText } = {
 
 		start: "  [POKEMON] reversed all other Pok\u00E9mon's auras!",
 	},
+	auramaster: {
+		name: "Aura Master",
+		shortdesc: "This Pokemon's Fighting- and Steel-type moves have their priority increased by 1.",
+	},
 	baddreams: {
 		name: "Bad Dreams",
 		desc: "Causes opposing Pokemon to lose 1/8 of their maximum HP, rounded down, at the end of each turn if they are asleep.",
@@ -1518,10 +1522,16 @@ export const AbilitiesText: { [id: IDEntry]: AbilityText } = {
 		desc: "If Sandstorm is active, this Pokemon's Ground-, Rock-, and Steel-type attacks have their power multiplied by 1.3. This Pokemon takes no damage from Sandstorm.",
 		shortDesc: "This Pokemon's Ground/Rock/Steel attacks do 1.3x in Sandstorm; immunity to it.",
 	},
+	
 	sandrush: {
 		name: "Sand Rush",
 		desc: "If Sandstorm is active, this Pokemon's Speed is doubled. This Pokemon takes no damage from Sandstorm.",
 		shortDesc: "If Sandstorm is active, this Pokemon's Speed is doubled; immunity to Sandstorm.",
+	},
+	sandsovereign: {
+		name: "Sand Sovereign",
+		desc: "Summons Sandstorm, this Pokemon summons Sandstorm. This Pokemon's Ground/Rock/Steel attacks do 1.3x in Sandstorm; immunity to it. Speed doubles in Sandstorm.",
+		shortDesc: "On switch-in Summons Sandstorm, if Sandstorm is active, the ability Sand Rush and Sand Force activates for this Pokemon.",
 	},
 	sandspit: {
 		name: "Sand Spit",
