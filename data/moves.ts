@@ -21582,7 +21582,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		accuracy: 100,
 		basePower: 15,
 		basePowerCallback(pokemon, target, move) {
-			if (pokemon.species.name === 'Greninja-Ash' && pokemon.hasAbility('battlebond') &&
+			if (pokemon.species.name === 'Greninja-Ash' && (pokemon.hasAbility('battlebond') || pokemon.hasAbility('etherealshroud')) &&
 				!pokemon.transformed) {
 				return move.basePower + 5;
 			}

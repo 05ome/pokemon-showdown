@@ -319,7 +319,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		flags: {},
 		name: "Aura Master",
 		rating: 4.5,
-		num: 902,
+		num: -102,
 	},
 	baddreams: {
 		onResidualOrder: 28,
@@ -4029,7 +4029,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		flags: {},
 		name: "Sand Sovereign",
 		rating: 4,
-		num: 901,
+		num: -101,
 	},
 	sandspit: {
 		onDamagingHit(damage, target, source, move) {

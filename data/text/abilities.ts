@@ -118,7 +118,7 @@ export const AbilitiesText: { [id: IDEntry]: AbilityText } = {
 	},
 	auramaster: {
 		name: "Aura Master",
-		shortdesc: "This Pokemon's Fighting- and Steel-type moves have their priority increased by 1.",
+		shortDesc: "This Pokemon's Fighting- and Steel-type moves have their priority increased by 1.",
 	},
 	baddreams: {
 		name: "Bad Dreams",
@@ -146,6 +146,13 @@ export const AbilitiesText: { [id: IDEntry]: AbilityText } = {
 	battlearmor: {
 		name: "Battle Armor",
 		shortDesc: "This Pokemon cannot be struck by a critical hit.",
+	},
+	etherealshroud: {
+		name: "Ethereal Shroud",
+		desc: "If this Pokemon is a Greninja, it transforms into Lucian-Greninja on Switch-In. If this Pokemon is a Lucian-Greninja, its Water Shuriken has 20 power and always hits five times. This Pokemon changes type depending on the move it uses and is immune to super effective attacks.",
+		shortDesc: "After Switch-In: becomes Ash-Greninja, Water Shuriken: 20 power, hits 5x and its type changes to match the type of the move it is about to use and is immune to SE attacks.",
+		activate: "  [POKEMON] became fully charged due to its bond with its Trainer!",
+		transform: "[POKEMON] became Lucian-Greninja!",
 	},
 	battlebond: {
 		name: "Battle Bond",
