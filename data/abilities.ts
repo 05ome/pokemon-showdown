@@ -75,6 +75,36 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4,
 		num: 184,
 	},
+	skysupremacy: {
+		// --- Aerilate Logic ---
+		onModifyTypePriority: -1,
+		onModifyType(move, pokemon) {
+			const noModifyType = [
+				'judgment', 'multiattack', 'naturalgift', 'revelationdance', 'technoblast', 'terrainpulse', 'weatherball',
+			];
+			if (move.type === 'Normal' && (!noModifyType.includes(move.id) || this.activeMove?.isMax) &&
+				!(move.isZ && move.category !== 'Status') && !(move.name === 'Tera Blast' && pokemon.terastallized)) {
+				move.type = 'Flying';
+				move.typeChangerBoosted = this.effect;
+			}
+		},
+		onBasePowerPriority: 23,
+		onBasePower(basePower, pokemon, target, move) {
+			if (move.typeChangerBoosted === this.effect) return this.chainModify([4915, 4096]);
+		},
+
+		// --- Gale Wings (Pre-Nerf) Logic ---
+		onModifyPriority(priority, pokemon, target, move) {
+			// Checks if the move is Flying type (which includes moves converted by the code above)
+			// Returns priority + 1 without checking for HP
+			if (move?.type === 'Flying') return priority + 1;
+		},
+
+		flags: {},
+		name: "Sky Supremacy",
+		rating: 5,
+		num: -104, 
+	},
 	aftermath: {
 		onDamagingHitOrder: 1,
 		onDamagingHit(damage, target, source, move) {
@@ -1907,6 +1937,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onModifyAtk(atk) {
 			return this.chainModify(2);
 		},
+		onModifySpa(spa) {
+			return this.chainModify(2);
+		},
 		flags: {},
 		name: "Huge Power",
 		rating: 5,
@@ -2326,6 +2359,37 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 0.5,
 		num: 102,
 	},
+	fluxdrive: {
+		// --- Levitate Logic (Immunity to Ground) ---
+		onTryHit(target, source, move) {
+			if (target !== source && move.type === 'Ground' && !source.hasAbility('moldbreaker')) {
+				this.add('-immune', target, '[from] ability: Flux Drive');
+				return null;
+			}
+		},
+		
+		// --- Ground STAB Logic (1.5x Damage) ---
+		onModifyAtkPriority: 5,
+		onModifyAtk(atk, attacker, defender, move) {
+			if (move.type === 'Ground') {
+				this.debug('Flux Drive boost');
+				return this.chainModify(1.5);
+			}
+		},
+		onModifySpAPriority: 5,
+		onModifySpA(spa, attacker, defender, move) {
+			if (move.type === 'Ground') {
+				this.debug('Flux Drive boost');
+				return this.chainModify(1.5);
+			}
+		},
+		flags: {
+			breakable: 1, // Mold Breaker can hit through the levitate
+		},
+		name: "Flux Drive",
+		rating: 5,
+		num: -105,
+	},
 	levitate: {
 		// airborneness implemented in sim/pokemon.js:Pokemon#isGrounded
 		flags: { breakable: 1 },
@@ -2495,29 +2559,43 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 4,
 		num: 98,
 	},
+
 	unsealed: {
-	onDamagePriority: -30,
-	onResidualOrder: 29,
-    name: "Unsealed",
-    shortDesc: "Prevents OHKO. If HP would drop to 0, HP becomes 1, Hoopa transforms into Unbound, changes ability to Magician, and restores full HP.",
-    onDamage(damage, target, source, effect) {
+		onDamagePriority: -30,
+		name: "Unsealed",
+		shortDesc: "Prevents OHKO. If HP drops to 1/3, transforms into Unbound, heals 100%, and becomes Magician.",
+		
+		// 1. The 'Sturdy' Mechanic (Survival)
+		onDamage(damage, target, source, effect) {
 			if (damage >= target.hp && effect && effect.effectType === 'Move') {
-				// this.add('-ability', target, 'Hoopa Form Switch');
-				this.add('-message',`Hoope has been unsealed.`)
+				this.add('-message', `Hoopa's seal is breaking!`);
 				return target.hp - 1;
 			}
 		},
-	onResidual(pokemon){
-		if(pokemon.hp <= pokemon.maxhp / 3){
-			const hoopaUnbound = this.dex.species.get('hoopaunbound');
-            pokemon.formeChange(hoopaUnbound);
-			pokemon.hp = pokemon.maxhp;
-            this.add('-heal', pokemon, pokemon.getHealth, '[from] ability: Unseal');
-			pokemon.setAbility('Magician')
-            return 0; 
-		}
-	}
-},
+
+		// 2. The Transformation Logic (Triggers immediately when HP is low)
+		onUpdate(pokemon) {
+			// Only trigger if it is Hoopa-Confined and HP is low (<= 1/3rd)
+			if (pokemon.species.id === 'hoopa' && pokemon.hp <= pokemon.maxhp / 3) {
+				
+				// 1. Transform
+				this.add('-activate', pokemon, 'ability: Unsealed');
+				pokemon.formeChange('Hoopa-Unbound', this.effect, true);
+				
+				// 2. Full Heal
+				this.heal(pokemon.maxhp); 
+				this.add('-message', `Hoopa Unbound has been unleashed!`);
+
+				// 3. Change Ability to Magician
+				// (This stops the loop because the ability is no longer 'Unsealed')
+				pokemon.setAbility('magician');
+			}
+		},
+		
+		flags: {failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, notransform: 1, cantsuppress: 1},
+		rating: 5,
+		num: -106,
+	},
 
 	magician: {
 		onAfterMoveSecondarySelf(source, target, move) {
@@ -3849,6 +3927,35 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Refrigerate",
 		rating: 4,
 		num: 174,
+	},
+	absolutezero: {
+		onModifyTypePriority: -1,
+		onModifyType(move, pokemon) {
+			const noModifyType = [
+				'judgment', 'multiattack', 'naturalgift', 'revelationdance', 'technoblast', 'terrainpulse', 'weatherball',
+			];
+			if (move.type === 'Normal' && (!noModifyType.includes(move.id) || this.activeMove?.isMax) &&
+				!(move.isZ && move.category !== 'Status') && !(move.name === 'Tera Blast' && pokemon.terastallized)) {
+				move.type = 'Ice';
+				move.typeChangerBoosted = this.effect;
+			}
+			
+			// This block applies the "Freeze-Dry" effect to ALL Ice moves used by this Pokemon
+			// (Including the ones converted from Normal)
+			if (move.type === 'Ice') {
+				move.onEffectiveness = function (typeMod, target, type) {
+					if (type === 'Water') return 1;
+				};
+			}
+		},
+		onBasePowerPriority: 23,
+		onBasePower(basePower, pokemon, target, move) {
+			if (move.typeChangerBoosted === this.effect) return this.chainModify([4915, 4096]);
+		},
+		flags: {},
+		name: "Absolute Zero",
+		rating: 4,
+		num: -103,
 	},
 	regenerator: {
 		onSwitchOut(pokemon) {
