@@ -388,11 +388,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	
 	etherealshroud: {
 		onStart(pokemon) {
-            // 1. Instant Transformation on Switch-In
 			if (pokemon.species.id === 'greninjabond' && !pokemon.transformed) {
 				this.add('-activate', pokemon, 'ability: Ethereal Shroud');
 				pokemon.formeChange('Greninja-Ash', this.effect, true);
-                // Calculate stats again after transformation
 				pokemon.baseMaxhp = Math.floor(Math.floor(
 					2 * pokemon.species.baseStats.hp + pokemon.set.ivs.hp + Math.floor(pokemon.set.evs.hp / 4) + 100
 				) * pokemon.level / 100 + 10);
@@ -404,13 +402,11 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onModifyMovePriority: -1,
 		onModifyMove(move, attacker) {
-            // 2. Water Shuriken hits 5 times
 			if (move.id === 'watershuriken' && attacker.species.name === 'Greninja-Ash' && !attacker.transformed) {
 				move.multihit = 5;
 			}
 		},
 		onPrepareHit(source, target, move) {
-            // 3. Protean Logic (Type Change)
 			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch' || move.callsMove) return;
 			const type = move.type;
 			if (type && type !== '???' && source.getTypes().join() !== type) {
@@ -419,27 +415,21 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			}
 		},
 		onTryHit(target, source, move) {
-            // 4. Inverse Wonder Guard (Immune to Super Effective)
 			if (target === source || move.category === 'Status' || move.id === 'struggle') return;
-            
-            // runEffectiveness returns > 0 if the move is Super Effective
-			if (target.runEffectiveness(move) > 0) { 
+			
+			// If Super Effective (> 0)...
+			if (target.runEffectiveness(move) > 0) {
 				if (move.smartTarget) {
 					move.smartTarget = false;
 				} else {
 					this.add('-immune', target, '[from] ability: Ethereal Shroud');
 				}
+				return null; // <--- This is the line that actually stops the damage!
 			}
 		},
-		onSourceModifyDamage(damage, source, target, move) {
-            if (target.runEffectiveness(move) > 0) {
-                return this.chainModify(0);
-            }
-        },
-		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1 },
 		name: "Ethereal Shroud",
 		rating: 5,
-		num: -100, // Custom number
+		num: -100,
 	},
 
 	beadsofruin: {
