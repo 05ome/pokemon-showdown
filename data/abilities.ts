@@ -4523,13 +4523,10 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
             	case 1:
                 	this.boost({ atk: 1 }, pokemon); // Attack +
                 	break;
-            	case 2:
-                	this.boost({ def: -1 }, pokemon); // Defense -
-                	break;
         	}
 
         // Move to next step (0 → 1 → 2 → 0 → …)
-        	pokemon.__boostStep = (pokemon.__boostStep + 1) % 3;
+        	pokemon.__boostStep = (pokemon.__boostStep + 1) % 2;
     	},
 		flags: {},
 		name: "Blaze Boost",
