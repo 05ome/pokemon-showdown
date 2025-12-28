@@ -385,6 +385,57 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 3.5,
 		num: 210,
 	},
+	
+	etherealshroud: {
+		onStart(pokemon) {
+            // 1. Instant Transformation on Switch-In
+			if (pokemon.species.id === 'greninjabond' && !pokemon.transformed) {
+				this.add('-activate', pokemon, 'ability: Ethereal Shroud');
+				pokemon.formeChange('Greninja-Ash', this.effect, true);
+                // Calculate stats again after transformation
+				pokemon.baseMaxhp = Math.floor(Math.floor(
+					2 * pokemon.species.baseStats.hp + pokemon.set.ivs.hp + Math.floor(pokemon.set.evs.hp / 4) + 100
+				) * pokemon.level / 100 + 10);
+				const newMaxHP = pokemon.volatiles['dynamax'] ? (2 * pokemon.baseMaxhp) : pokemon.baseMaxhp;
+				pokemon.hp = newMaxHP - (pokemon.maxhp - pokemon.hp);
+				pokemon.maxhp = newMaxHP;
+				this.add('-heal', pokemon, pokemon.getHealth, '[silent]');
+			}
+		},
+		onModifyMovePriority: -1,
+		onModifyMove(move, attacker) {
+            // 2. Water Shuriken hits 5 times
+			if (move.id === 'watershuriken' && attacker.species.name === 'Greninja-Ash' && !attacker.transformed) {
+				move.multihit = 5;
+			}
+		},
+		onPrepareHit(source, target, move) {
+            // 3. Protean Logic (Type Change)
+			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch' || move.callsMove) return;
+			const type = move.type;
+			if (type && type !== '???' && source.getTypes().join() !== type) {
+				if (!source.setType(type)) return;
+				this.add('-start', source, 'typechange', type, '[from] ability: Ethereal Shroud');
+			}
+		},
+		onTryHit(target, source, move) {
+            // 4. Inverse Wonder Guard (Immune to Super Effective)
+			if (target === source || move.category === 'Status' || move.id === 'struggle') return;
+            
+            // runEffectiveness returns > 0 if the move is Super Effective
+			if (target.runEffectiveness(move) > 0) { 
+				if (move.smartTarget) {
+					move.smartTarget = false;
+				} else {
+					this.add('-immune', target, '[from] ability: Ethereal Shroud');
+				}
+			}
+		},
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1 },
+		name: "Ethereal Shroud",
+		rating: 5,
+		num: -100, // Custom number
+	},
 
 	beadsofruin: {
 		onStart(pokemon) {
