@@ -431,6 +431,11 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				}
 			}
 		},
+		onSourceModifyDamage(damage, source, target, move) {
+            if (target.runEffectiveness(move) > 0) {
+                return this.chainModify(0);
+            }
+        },
 		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1, failskillswap: 1, cantsuppress: 1 },
 		name: "Ethereal Shroud",
 		rating: 5,
