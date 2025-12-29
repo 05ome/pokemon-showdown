@@ -22907,6 +22907,8 @@ export const Learnsets: import('../sim/dex-species').LearnsetDataTable = {
 	},
 	mewtwo: {
 		learnset: {
+			championsgrace: ["8M", "9M"],
+			championseyes: ["8M", "9M"],
 			aerialace: ["7M", "6M", "5M", "4M", "3M"],
 			agility: ["9M", "8M", "8V"],
 			allyswitch: ["8M"],

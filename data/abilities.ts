@@ -2563,7 +2563,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	unsealed: {
 		onDamagePriority: -30,
 		name: "Unsealed",
-		shortDesc: "Prevents OHKO. If HP drops to 1/3, transforms into Unbound, heals 100%, and becomes Magician.",
+		shortDesc: "Prevents OHKO. If HP drops to 1/4, transforms into Unbound, heals 100%, and becomes Magician.",
 		
 		// 1. The 'Sturdy' Mechanic (Survival)
 		onDamage(damage, target, source, effect) {
@@ -2576,10 +2576,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		// 2. The Transformation Logic (Triggers immediately when HP is low)
 		onUpdate(pokemon) {
 			// Only trigger if it is Hoopa-Confined and HP is low (<= 1/3rd)
-			if (pokemon.species.id === 'hoopa' && pokemon.hp <= pokemon.maxhp / 3) {
+			if (pokemon.species.id === 'hoopa' && pokemon.hp <= pokemon.maxhp / 4) {
 				
 				// 1. Transform
-				this.add('-activate', pokemon, 'ability: Unsealed');
 				pokemon.formeChange('Hoopa-Unbound', this.effect, true);
 				
 				// 2. Full Heal
@@ -3546,9 +3545,10 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		num: 46,
 	},
 	championsaura: {
+		shortDesc: "Mewtwo's Champion Ability. Everything will only hit it in neutral or below damage.",
 		onStart(pokemon) {
             this.add("-activate", pokemon, "ability: Champion's Aura");
-            this.add("-message", `${pokemon.name} has entered! ${pokemon.name} Aura Radiates, Returns everything except for itself to neutral.`);
+            this.add("-message", `${pokemon.name} has entered! ${pokemon.name}'s Aura Radiates, Everything shall be Neutralized.`);
         },
 		onAnyModifyBoost(boosts, pokemon) {
 			const unawareUser = this.effectState.target;

@@ -14701,16 +14701,17 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		contestType: "Clever",
 	},
 	championseyes: {
+		shortDesc: "Ignores Dark Immunity, Cannot be used Twice in a row.",
 		num: -1000,
 		accuracy: 100,
-		basePower: 160,
+		basePower: 180,
 		category: "Special",
 		name: "Champion's Eyes",
-		pp: 20,
+		pp: 10,
 		priority: 1,
 		flags: { protect: 1, mirror: 1, cantusetwice: 1},
 		secondary: {
-			chance: 10,
+			chance: 30,
 			boosts: {
 				spd: -1,
 			},
