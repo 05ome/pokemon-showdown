@@ -2362,7 +2362,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	fluxdrive: {
 		// --- Levitate Logic (Immunity to Ground) ---
 		onTryHit(target, source, move) {
-			if (target !== source && move.type === 'Ground' && !source.hasAbility('moldbreaker')) {
+			if (target !== source && move.type === 'Ground') {
 				this.add('-immune', target, '[from] ability: Flux Drive');
 				return null;
 			}
@@ -3544,6 +3544,52 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Pressure",
 		rating: 2.5,
 		num: 46,
+	},
+	championsaura: {
+		onStart(pokemon) {
+            this.add("-activate", pokemon, "ability: Champion's Aura");
+            this.add("-message", `${pokemon.name} has entered! ${pokemon.name} Aura Radiates, Returns everything except for itself to neutral.`);
+        },
+		onAnyModifyBoost(boosts, pokemon) {
+			const unawareUser = this.effectState.target;
+			if (unawareUser === pokemon) return;
+			if (unawareUser === this.activePokemon && pokemon === this.activeTarget) {
+				boosts['def'] = 0;
+				boosts['spd'] = 0;
+				boosts['evasion'] = 0;
+			}
+			if (pokemon === this.activePokemon && unawareUser === this.activeTarget) {
+				boosts['atk'] = 0;
+				boosts['def'] = 0;
+				boosts['spa'] = 0;
+				boosts['accuracy'] = 0;
+			}
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			if (target.getMoveHitData(move).typeMod > 0) {
+				this.debug('Prism Armor neutralize');
+				return this.chainModify(0.5);
+			}
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (source && target === source) return;
+			let showMsg = false;
+			let i: BoostID;
+			for (i in boost) {
+				if (boost[i]! < 0) {
+					delete boost[i];
+					showMsg = true;
+				}
+			}
+			if (showMsg && !(effect as ActiveMove).secondaries && effect.id !== 'octolock') {
+				this.add("-fail", target, "unboost", "[from] ability: Champion's Aura", `[of] ${target}`);
+			}
+		},
+		onCriticalHit: false,
+		flags: {},
+		name: "Champion's Aura",
+		rating: 5,
+		num: -1000,
 	},
 	primordialsea: {
 		onStart(source) {

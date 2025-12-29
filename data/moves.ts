@@ -4753,7 +4753,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		contestType: "Clever",
 	},
 	championsgrace:{
-		num:941,
+		num:-1001,
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
@@ -14701,20 +14701,21 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		contestType: "Clever",
 	},
 	championseyes: {
-		num: 940,
+		num: -1000,
 		accuracy: 100,
 		basePower: 160,
 		category: "Special",
 		name: "Champion's Eyes",
-		pp: 10,
+		pp: 20,
 		priority: 1,
-		flags: { protect: 1, mirror: 1 },
+		flags: { protect: 1, mirror: 1, cantusetwice: 1},
 		secondary: {
 			chance: 10,
 			boosts: {
 				spd: -1,
 			},
 		},
+		ignoreImmunity: { 'Dark': true },
 		target: "normal",
 		type: "Psychic",
 		contestType: "Clever",
