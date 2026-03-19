@@ -40,6 +40,11 @@ export const FormatsData: import('../sim/dex-species').SpeciesFormatsDataTable =
 		tier: "Illegal",
 		natDexTier: "OU",
 	},
+	charizardmegaz: {
+		isNonstandard: "CAP",
+		tier: "CAP",
+		natDexTier: "CAP",
+	},
 	charizardgmax: {
 		isNonstandard: "Past",
 		tier: "Illegal",
