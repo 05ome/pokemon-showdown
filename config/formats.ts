@@ -161,6 +161,22 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		// no restrictions, for serious (other than team preview)
 		ruleset: ['Team Preview', 'Cancel Mod', 'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
 	},
+	{
+		name: "[Gen 9] Sinnoh Play",
+		mod: 'gen9',
+		debug: true,
+		battle: {trunc: Math.trunc },
+		ruleset: ['Team Preview',  'Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100'],
+		onTeamPreview() {
+        this.add('clearpoke');
+        for (const pokemon of this.getAllPokemon()) {
+            this.add('poke', pokemon.side.id, "-*", pokemon.item ? 'item' : '');
+        	}
+        for (const side of this.sides) {
+            side.emit('request', side.getRequestData());
+        	}
+    	},
+	},
 
 	// S/V Doubles
 	///////////////////////////////////////////////////////////////////
@@ -505,36 +521,6 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		ruleset: ['[Gen 9] Random Battle', 'Godly Gift Mod', 'Team Preview'],
 		onBegin() {
 			this.add(`raw|<div class="broadcast-blue"><b>In this format, the "God" in the first slot has "gifted" (shared) its base attack to the Pok&eacute;mon in the second slot, defense to the one in the third slot, etc."`);
-		},
-	},
-	{
-		name: "[Gen 9] Linked",
-		desc: `The first two moves in a Pok&eacute;mon's moveset are used simultaneously.`,
-		mod: 'linked',
-		// searchShow: false,
-		ruleset: ['Standard OMs', 'Sleep Moves Clause', 'Evasion Clause', 'Terastal Clause'],
-		banlist: [
-			'Annihilape', 'Arceus', 'Archaludon', 'Baxcalibur', 'Calyrex-Ice', 'Calyrex-Shadow', 'Chi-Yu', 'Chien-Pao', 'Deoxys-Attack', 'Deoxys-Normal', 'Dialga', 'Dialga-Origin',
-			'Eternatus', 'Flutter Mane', 'Giratina', 'Giratina-Origin', 'Gouging Fire', 'Groudon', 'Ho-Oh', 'Iron Bundle', 'Jirachi', 'Koraidon', 'Kyogre', 'Kyurem-Black', 'Kyurem-White',
-			'Landorus-Incarnate', 'Lugia', 'Lunala', 'Magearna', 'Meloetta', 'Mewtwo', 'Miraidon', 'Necrozma-Dawn-Wings', 'Necrozma-Dusk-Mane', 'Ogerpon-Hearthflame', 'Palafin',
-			'Palkia', 'Palkia-Origin', 'Rayquaza', 'Reshiram', 'Roaring Moon', 'Shaymin-Sky', 'Sneasler', 'Solgaleo', 'Spectrier', 'Ursaluna-Bloodmoon', 'Urshifu-Single-Strike',
-			'Urshifu-Rapid-Strike', 'Volcarona', 'Zacian', 'Zacian-Crowned', 'Zamazenta-Crowned', 'Zekrom', 'Arena Trap', 'Chlorophyll', 'Drought', 'Electric Surge', 'Moody',
-			'Sand Rush', 'Serene Grace', 'Shadow Tag', 'Slush Rush', 'Speed Boost', 'Swift Swim', 'Unburden', 'Booster Energy', 'King\'s Rock', 'Quick Claw', 'Razor Fang',
-			'Baton Pass', 'Last Respects', 'Shed Tail',
-		],
-		restricted: [
-			'Assurance', 'Baneful Bunker', 'Bounce', 'Burning Bulwark', 'Copycat', 'Detect', 'Dig', 'Dive', 'Encore', 'Endeavor', 'Fly', 'Imprison', 'Nasty Plot', 'Phantom Force',
-			'Protect', 'Ruination', 'Shadow Force', 'Shell Smash', 'Silk Trap', 'Spiky Shield', 'Sunny Day', 'Super Fang', 'Swords Dance', 'Taunt', 'Trick Room',
-		],
-		onValidateSet(set) {
-			const problems = [];
-			for (const [i, moveid] of set.moves.entries()) {
-				const move = this.dex.moves.get(moveid);
-				if ([0, 1].includes(i) && this.ruleTable.isRestricted(`move:${move.id}`)) {
-					problems.push(`${set.name || set.species}'s move ${move.name} cannot be linked.`);
-				}
-			}
-			return problems;
 		},
 	},
 	{
