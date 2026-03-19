@@ -809,6 +809,18 @@ export const Items: import('../sim/dex-items').ItemDataTable = {
 		gen: 6,
 		isNonstandard: "Past",
 	},
+	charizarditez: {
+		name: "Charizardite Z",
+		spritenum: 585,
+		megaStone: { "Charizard": "Charizard-Mega-Z" },
+		itemUser: ["Charizard"],
+		onTakeItem(item, source) {
+			return !item.megaStone?.[source.baseSpecies.baseSpecies];
+		},
+		num: 999,
+		gen: 6,
+		isNonstandard: "Past",
+	},
 	chartiberry: {
 		name: "Charti Berry",
 		spritenum: 62,
