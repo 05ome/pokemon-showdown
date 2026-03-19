@@ -23,6 +23,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		weightkg: 6.9,
 		color: "Green",
 		eggGroups: ["Monster", "Grass"],
+		gen: 9,
 	},
 	ivysaur: {
 		num: 2,
