@@ -133,7 +133,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		canGigantamax: "G-Max Wildfire",
 	},
 	charizardmegaz: {
-		num: 359,
+		num: 6,
 		name: "Charizard-Mega-Z",
 		baseSpecies: "Charizard",
 		forme: "Mega-Z",
