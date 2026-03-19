@@ -817,9 +817,9 @@ export const Items: import('../sim/dex-items').ItemDataTable = {
 		onTakeItem(item, source) {
 			return !item.megaStone?.[source.baseSpecies.baseSpecies];
 		},
-		num: 999,
+		num: -100,
 		gen: 6,
-		isNonstandard: "Past",
+		isNonstandard: "CAP",
 	},
 	chartiberry: {
 		name: "Charti Berry",
