@@ -5614,4 +5614,106 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 3,
 		num: -3,
 	},
+	championsaura: {
+		shortDesc: "Mewtwo's Champion Ability. Everything will only hit it in neutral or below damage.",
+		onStart(pokemon) {
+            this.add("-activate", pokemon, "ability: Champion's Aura");
+            this.add("-message", `${pokemon.name} has entered! ${pokemon.name}'s Aura Radiates, Everything shall be Neutralized.`);
+        },
+		onAnyModifyBoost(boosts, pokemon) {
+			const unawareUser = this.effectState.target;
+			if (unawareUser === pokemon) return;
+			if (unawareUser === this.activePokemon && pokemon === this.activeTarget) {
+				boosts['def'] = 0;
+				boosts['spd'] = 0;
+				boosts['evasion'] = 0;
+			}
+			if (pokemon === this.activePokemon && unawareUser === this.activeTarget) {
+				boosts['atk'] = 0;
+				boosts['def'] = 0;
+				boosts['spa'] = 0;
+				boosts['accuracy'] = 0;
+			}
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			if (target.getMoveHitData(move).typeMod > 0) {
+				this.debug('Prism Armor neutralize');
+				return this.chainModify(0.5);
+			}
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (source && target === source) return;
+			let showMsg = false;
+			let i: BoostID;
+			for (i in boost) {
+				if (boost[i]! < 0) {
+					delete boost[i];
+					showMsg = true;
+				}
+			}
+			if (showMsg && !(effect as ActiveMove).secondaries && effect.id !== 'octolock') {
+				this.add("-fail", target, "unboost", "[from] ability: Champion's Aura", `[of] ${target}`);
+			}
+		},
+		onCriticalHit: false,
+		flags: {},
+		name: "Champion's Aura",
+		rating: 5,
+		num: -1000,
+	},
+
+	ghastlysurge: {
+		onStart(source){
+			this.field.setTerrain('ghostterrain');
+		},
+		flags:  {},
+		name: "Ghastly Surge",
+		rating: 4,
+		num: -1001
+	},
+	etherealshroud: {
+		onStart(pokemon) {
+			if (pokemon.species.id === 'greninjabond' && !pokemon.transformed) {
+				this.add('-activate', pokemon, 'ability: Ethereal Shroud');
+				pokemon.formeChange('Greninja-Ash', this.effect, true);
+				pokemon.baseMaxhp = Math.floor(Math.floor(
+					2 * pokemon.species.baseStats.hp + pokemon.set.ivs.hp + Math.floor(pokemon.set.evs.hp / 4) + 100
+				) * pokemon.level / 100 + 10);
+				const newMaxHP = pokemon.volatiles['dynamax'] ? (2 * pokemon.baseMaxhp) : pokemon.baseMaxhp;
+				pokemon.hp = newMaxHP - (pokemon.maxhp - pokemon.hp);
+				pokemon.maxhp = newMaxHP;
+				this.add('-heal', pokemon, pokemon.getHealth, '[silent]');
+			}
+		},
+		onModifyMovePriority: -1,
+		onModifyMove(move, attacker) {
+			if (move.id === 'watershuriken' && attacker.species.name === 'Greninja-Ash' && !attacker.transformed) {
+				move.multihit = 5;
+			}
+		},
+		onPrepareHit(source, target, move) {
+			if (move.hasBounced || move.flags['futuremove'] || move.sourceEffect === 'snatch' || move.callsMove) return;
+			const type = move.type;
+			if (type && type !== '???' && source.getTypes().join() !== type) {
+				if (!source.setType(type)) return;
+				this.add('-start', source, 'typechange', type, '[from] ability: Ethereal Shroud');
+			}
+		},
+		onTryHit(target, source, move) {
+			if (target === source || move.category === 'Status' || move.id === 'struggle') return;
+			
+			// If Super Effective (> 0)...
+			if (target.runEffectiveness(move) > 0) {
+				if (move.smartTarget) {
+					move.smartTarget = false;
+				} else {
+					this.add('-immune', target, '[from] ability: Ethereal Shroud');
+				}
+				return null; // <--- This is the line that actually stops the damage!
+			}
+		},
+		name: "Ethereal Shroud",
+		rating: 5,
+		num: -1002,
+	},
 };

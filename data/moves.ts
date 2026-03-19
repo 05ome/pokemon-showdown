@@ -22091,4 +22091,144 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		type: "Fire",
 		contestType: "Beautiful",
 	},
+	ghostterrain: {
+		num: -1002,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Ghost Terrain",
+		pp: 10,
+		priority: 0,
+		flags: { nonsky: 1, metronome: 1 },
+		terrain: 'ghostterrain',
+		condition: {
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) return 8;
+				else if(source?.hasAbility('ghastlysurge')) return 30;
+				return 5;
+			},
+
+			// --- 1) Boost Ghost-type moves by 30% ---
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+				if (move.type === 'Ghost' && attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
+					// this.debug('Ghost Terrain boost');
+					return this.chainModify([5325, 4096]); // 1.30x
+				}
+			},
+
+			// --- 2) PP Drop Logic (Runs immediately after a move) ---
+			onAfterMove(pokemon, target, move) {
+				if (!pokemon.isGrounded() || pokemon.hasType('Ghost')) return;
+				if (move.isMax || move.isZ) return; // Don't drain PP for Z/Max moves
+
+				if (move.id && move.pp > 0) {
+					const lost = Math.min(2, move.pp);
+					pokemon.deductPP(move.id, lost);
+
+					// Visual: Triggers the "Spite" animation
+					this.add('-activate', pokemon, 'move: Spite', move.name, lost);
+					this.add('-message', `${pokemon.name} lost PP due to the Ghost Terrain!`);
+				}
+			},
+
+			// --- 3) Sleep Damage (Runs at end of turn) ---
+			onResidualOrder: 26,
+			onResidualSubOrder: 1,
+			onResidual(pokemon) {				
+				if (!pokemon.isGrounded() || pokemon.fainted) return;
+
+				// Sleep damage: 1/8th HP
+				if (pokemon.status === 'slp' && !pokemon.volatiles['curse'] && !pokemon.volatiles['nightmare']) {
+					this.damage(pokemon.baseMaxhp / 8, pokemon, null, 'Ghost Terrain');
+					this.add('-message', `${pokemon.name} lost HP due to the Ghost Terrain!`)
+				}
+			},
+
+			// --- 4) Modify Moves (Camouflage, etc) ---
+			onModifyMove(move, pokemon, target) {
+				if (!pokemon.isGrounded()) return;
+
+				// Ominous Wind / Silver Wind adjustments
+				if (move.id === 'ominouswind' && move.secondaries) {
+					for (const sec of move.secondaries) {
+						if (sec.self && sec.boosts) sec.chance = 30;
+					}
+				}
+				if (move.id === 'silverwind' && move.secondaries) {
+					for (const sec of move.secondaries) {
+						if (sec.self && sec.boosts) sec.chance = 5;
+					}
+				}
+
+				// Camouflage & Mimicry -> Ghost type
+				if (move.id === 'camouflage' || move.id === 'mimicry') {
+					move.onHit = (t) => {
+						t.setType('Ghost');
+						this.add('-start', t, 'typechange', 'Ghost', `[from] move: ${move.name}`);
+					};
+				}
+			},
+
+			// --- Field Start/End Messages ---
+			onFieldStart(field, source, effect) {
+				if (effect?.effectType === 'Ability') {
+					this.add('-fieldstart', 'Ghost Terrain', '[from] ability: ' + effect.name, `[of] ${source}`);
+				} else {
+					this.add('-fieldstart', 'Ghost Terrain');
+				}
+				if(source?.hasAbility('ghastlysurge')){
+					this.add('-message', 'Ghost Terrain has been setup for eternity, The Haunting ensues!')
+				}
+			},
+			onFieldEnd() {
+				this.add('-fieldend', 'Ghost Terrain');
+			},
+		},
+		secondary: null,
+		target: "all",
+		type: "Ghost",
+		zMove: { boost: { spa: 1 } },
+		contestType: "Clever",
+	},
+
+	championseyes: {
+		shortDesc: "Ignores Dark Immunity, Cannot be used Twice in a row.",
+		num: -1000,
+		accuracy: 100,
+		basePower: 180,
+		category: "Special",
+		name: "Champion's Eyes",
+		pp: 10,
+		priority: 1,
+		flags: { protect: 1, mirror: 1, cantusetwice: 1},
+		secondary: {
+			chance: 30,
+			boosts: {
+				spd: -1,
+			},
+		},
+		ignoreImmunity: { 'Dark': true },
+		target: "normal",
+		type: "Psychic",
+		contestType: "Clever",
+	},
+
+	championsgrace:{
+		num:-1001,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Champion's Grace",
+		onHit(pokemon, source) {
+			this.add('-message', `The Champion graces you with a free turn, Mewtwo Allows you to move.`);
+		},	
+		pp:10,
+		priority:4,
+		secondary: null,
+		target: "self",
+		type: "Psychic",
+	},
 };
