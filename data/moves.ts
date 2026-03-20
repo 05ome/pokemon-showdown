@@ -22091,6 +22091,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		type: "Fire",
 		contestType: "Beautiful",
 	},
+
 	ghostterrain: {
 		num: -1002,
 		accuracy: true,
@@ -22141,7 +22142,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 
 				// Sleep damage: 1/8th HP
 				if (pokemon.status === 'slp' && !pokemon.volatiles['curse'] && !pokemon.volatiles['nightmare']) {
-					this.damage(pokemon.baseMaxhp / 8, pokemon, null, 'Ghost Terrain');
+					this.damage(pokemon.baseMaxhp / 8, pokemon);
 					this.add('-message', `${pokemon.name} lost HP due to the Ghost Terrain!`)
 				}
 			},
@@ -22221,6 +22222,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		basePower: 0,
 		category: "Status",
 		name: "Champion's Grace",
+		flags: {},
 		onHit(pokemon, source) {
 			this.add('-message', `The Champion graces you with a free turn, Mewtwo Allows you to move.`);
 		},	
@@ -22229,5 +22231,285 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		secondary: null,
 		target: "self",
 		type: "Psychic",
+	},
+	volcanicterrain: {
+		num: -1003, // Custom ID
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Volcanic Terrain",
+		pp: 10,
+		priority: 0,
+		flags: {nonsky: 1},
+		terrain: 'volcanicterrain',
+		condition: {
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) {
+					return 8;
+				}
+				return 5;
+			},	
+			onFieldStart(field, source, effect) {
+				this.add('-fieldstart', 'move: Volcanic Terrain');
+			},
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+				// Terrains typically only affect grounded Pokemon
+				if (attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
+					if (move.type === 'Fire') {
+						this.debug('volcanic terrain boost');
+						return this.chainModify(1.5); // 1.5x damage
+					}
+					if (move.type === 'Water') {
+						this.debug('volcanic terrain weaken');
+						return this.chainModify(0.25); // Deals 0.25x damage
+					}
+				}
+			},
+			onAnySwitchIn(pokemon) {
+				// Chip damage on switch-in, acts like an entry hazard
+				if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
+					this.damage(pokemon.baseMaxhp / 16, pokemon);
+				}
+			},
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldResidual() {
+				// Chip damage at the end of the turn
+				for (const pokemon of this.getAllActive()) {
+					if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasAbility('magicguard')) {
+						this.damage(pokemon.baseMaxhp / 16, pokemon);
+					}
+				}
+			},
+			onChargeMove(pokemon, target, move) {
+				// Skips the charge turn for Solar Beam and Solar Blade
+				if (move.id === 'solarbeam' || move.id === 'solarblade') {
+					this.add('-buildin', pokemon);
+					return false; 
+				}
+			},
+			onEnd() {
+				this.add('-fieldend', 'move: Volcanic Terrain');
+			},
+		},
+		secondary: null,
+		zMove: { boost: { atk: 1 } },
+		target: "all",
+		type: "Fire",
+	},
+	umbralterrain: {
+		num: -1004, 
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Umbral Terrain",
+		pp: 5, 
+		priority: 0,
+		flags: {nonsky: 1},
+		terrain: 'umbralterrain',
+		condition: {
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) {
+					return 8;
+				}
+				return 5;
+			},
+			
+			// 1. Healing moves don't work
+			onAnyTryHeal(damage, target, source, effect) {
+				this.add('-message', "The umbral aura suffocates the healing attempt!");
+				return false;
+			},
+			
+			// 2. Stat boosts don't work (Prevents gaining NEW boosts)
+			onAnyTryBoost(boost, target, source, effect) { // <-- Changed from onAnyBoost to onAnyTryBoost
+				let showMsg = false;
+				for (let i in boost) {
+					// @ts-ignore
+					if (boost[i] > 0) {
+						// @ts-ignore
+						delete boost[i];
+						showMsg = true;
+					}
+				}
+				if (showMsg && !(effect as ActiveMove).secondaries) {
+					this.add('-message', "The umbral aura crushes the stat boost!");
+				}
+			},
+			
+			// 2.5. Stat boosts don't work (Ignores EXISTING boosts)
+			onAnyModifyMove(move) {
+				move.ignoreOffensive = true;
+				move.ignoreDefensive = true;
+			},
+
+			// Merged onSet messages into onFieldStart along with the ability/item wipe
+			onFieldStart(field, source, effect) {
+				this.add('-fieldstart', 'move: Umbral Terrain');
+				this.add('-message', "An oppressive shadow falls! Abilities, items, stat boosts, and healing are nullified!");
+				
+				for (const mon of this.getAllActive()) {
+					this.singleEvent('End', mon.getItem(), mon.itemState, mon);
+					this.singleEvent('End', mon.getAbility(), mon.abilityState, mon);
+				}
+			},
+			onAnySwitchIn(pokemon) {
+				this.singleEvent('End', pokemon.getItem(), pokemon.itemState, pokemon);
+				this.singleEvent('End', pokemon.getAbility(), pokemon.abilityState, pokemon);
+			},
+			onEnd() {
+				this.add('-fieldend', 'move: Umbral Terrain');
+			},
+		},
+		secondary: null,
+		zMove: {boost: { spa:1, atk: 1}},
+		target: "all",
+		type: "Dark",
+	},
+	blightterrain: {
+		num: -1005, 
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Blight Terrain",
+		pp: 10, 
+		priority: 0,
+		flags: {nonsky: 1},
+		terrain: 'blightterrain',
+		condition: {
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) {
+					return 8;
+				}
+				return 5;
+			},
+			// Replaced onSet with onFieldStart
+			onFieldStart(field, source, effect) {
+				this.add('-fieldstart', 'move: Volcanic Terrain');
+			},
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+				if (attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
+					if (move.type === 'Fire') {
+						this.debug('volcanic terrain boost');
+						return this.chainModify(1.5); 
+					}
+					if (move.type === 'Water') {
+						this.debug('volcanic terrain weaken');
+						return this.chainModify(0.25); 
+					}
+				}
+			},
+			onAnySwitchIn(pokemon) {
+				if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
+					this.damage(pokemon.baseMaxhp / 16, pokemon);
+				}
+			},
+			onFieldResidualOrder: 27,
+			onFieldResidualSubOrder: 7,
+			onFieldResidual() {
+				for (const pokemon of this.getAllActive()) {
+					if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasAbility('magicguard')) {
+						this.damage(pokemon.baseMaxhp / 16, pokemon);
+					}
+				}
+			},
+			onChargeMove(pokemon, target, move) {
+				if (move.id === 'solarbeam' || move.id === 'solarblade') {
+					this.add('-buildin', pokemon);
+					return false; 
+				}
+			},
+			onEnd() {
+				this.add('-fieldend', 'move: Volcanic Terrain');
+			},
+		},
+		secondary: null,
+		target: "all",
+		type: "Poison",
+	},
+	tectonicterrain: {
+		num: -1006, 
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Tectonic Domain",
+		pp: 10,
+		priority: 0,
+		flags: {nonsky: 1},
+		terrain: 'tectonicterrain',
+		condition: {
+			effectType: 'Terrain',
+			duration: 5,
+			durationCallback(source, effect) {
+				if (source?.hasItem('terrainextender')) {
+					return 8;
+				}
+				return 5;
+			},
+
+			// I replaced 'onSet' with 'onFieldStart' to fix the TS error
+			onFieldStart(field, source, effect) {
+				this.add('-fieldstart', 'move: Tectonic Terrain');
+				this.add('-message', "The battlefield violently fractures! All Pokémon are grounded!");
+			},
+
+			// 1. Heavy Switch-in Penalty (1/4 Max HP)
+			onAnySwitchIn(pokemon) {
+				if (!pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
+					this.add('-message', `The violently shifting earth batters ${pokemon.name}!`);
+					this.damage(pokemon.baseMaxhp / 4, pokemon);
+				}
+			},
+
+			// 2. Ground-type moves boosted by 1.5x
+			onAnyBasePowerPriority: 6,
+			onAnyBasePower(basePower, attacker, defender, move) {
+				if (move.type === 'Ground') {
+					this.debug('Tectonic Terrain boost');
+					return this.chainModify(1.5);
+				}
+			},
+
+			// 3. Grounding Flying and Levitate Pokémon
+			onAnyModifyMove(move, attacker, defender) {
+				if (move.type === 'Ground') {
+					// Force the move to ignore Ground immunities (Levitate, Air Balloon, etc.)
+					if (!move.ignoreImmunity) move.ignoreImmunity = {};
+					if (move.ignoreImmunity !== true) {
+						move.ignoreImmunity['Ground'] = true;
+					}
+				
+					// Inject the Speed drop secondary effect
+					if (move.category !== 'Status') {
+						if (!move.secondaries) move.secondaries = [];
+						move.secondaries.push({
+							chance: 100,
+							boosts: {
+								spe: -1,
+							},
+						});
+					}
+				}
+			},
+			onAnyEffectiveness(typeMod, target, type, move) {
+				if (move.type === 'Ground' && type === 'Flying') {
+					return 0; 
+				}
+			},
+			onEnd() {
+				this.add('-fieldend', 'move: Tectonic Terrain');
+			},
+		},
+		secondary: null,
+		target: "all",
+		type: "Ground",
 	},
 };

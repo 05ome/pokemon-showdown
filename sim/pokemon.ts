@@ -857,7 +857,7 @@ export class Pokemon {
 		if (this.getAbility().flags['notransform'] && this.transformed) return true;
 		if (this.getAbility().flags['cantsuppress']) return false;
 		if (this.volatiles['gastroacid']) return true;
-
+		if (this.battle.field.terrain === 'umbralterrain') return true;
 		// Check if any active pokemon have the ability Neutralizing Gas
 		if (this.hasItem('Ability Shield') || this.ability === ('neutralizinggas' as ID)) return false;
 		for (const pokemon of this.battle.getAllActive()) {
@@ -875,6 +875,7 @@ export class Pokemon {
 		if (this.getItem().isPrimalOrb) return false;
 		if (this.battle.gen >= 5 && !this.isActive) return true;
 		if (this.volatiles['embargo'] || this.battle.field.pseudoWeather['magicroom']) return true;
+		if (this.battle.field.terrain === 'umbralterrain') return true
 		// check Fling first to avoid infinite recursion
 		if (isFling) return this.battle.gen >= 5 && this.hasAbility('klutz');
 		return !this.getItem().ignoreKlutz && this.hasAbility('klutz');
