@@ -22326,6 +22326,13 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					mon.addVolatile('umbralcurse');
 				}
 			},
+			onFieldResidual(field,source,effect){
+				for (const mon of this.getAllActive()) {
+					this.singleEvent('End', mon.getItem(), mon.itemState, mon);
+					this.singleEvent('End', mon.getAbility(), mon.abilityState, mon);
+					mon.addVolatile('umbralcurse');
+				}
+			},
 			onAnySwitchIn(pokemon) {
 				this.singleEvent('End', pokemon.getItem(), pokemon.itemState, pokemon);
 				this.singleEvent('End', pokemon.getAbility(), pokemon.abilityState, pokemon);
@@ -22422,8 +22429,14 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					pokemon.addVolatile('tectoniccurse');
 				}
 			},
-			onAnySwitchIn(pokemon) {
+			onSwitchIn(pokemon) {
 				pokemon.addVolatile('tectoniccurse');
+				this.damage(pokemon.baseMaxhp / 4, pokemon)
+			},
+			onFieldResidual(target, source, effect) {
+				for (const pokemon of this.getAllActive()) {
+					pokemon.addVolatile('tectoniccurse');
+				}
 			},
 			onAnyBasePowerPriority: 6,
 			onAnyBasePower(basePower, attacker, defender, move) {

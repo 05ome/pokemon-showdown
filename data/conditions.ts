@@ -546,15 +546,14 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 	tectoniccurse: {
 		name: 'Tectonic Curse',
 		noCopy: true,
-		onStart(pokemon) {
-			if (!pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
-				this.add('-message', `The violently shifting earth batters ${pokemon.name}!`);
-				this.damage(pokemon.baseMaxhp / 4, pokemon);
-			}
-		},
 		onDamagingHit(damage, target, source, move) {
 			if (move.type === 'Ground') {
 				this.boost({spe: -1}, target, source, move);
+			}
+		},
+		onBasePower(relayVar, source, target, move) {
+			if(move.type === 'Ground'){
+				this.chainModify(1.5);
 			}
 		},
 	},
@@ -562,7 +561,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		name: 'Umbral Curse',
 		noCopy: true,
 		onTryHeal(damage, target, source, effect) {
-			this.add('-message', "The umbral aura suffocates the healing attempt!");
+			this.add('-message', "The umbral aura suffocates the healing attempt! Your Healing attempt is NULL");
 			return false;
 		},
 		onTryBoost(boost, target, source, effect) {
@@ -589,7 +588,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			if(source.hasAbility('Poison Heal')) return;
 			this.add('-message', `The blight corrupted the healing!`);
 			this.damage(damage, target, source, effect);
-			return 0; 
+			return this.chainModify(-1); 
 		},
 
 		// 2. Attacker Logic: Forces Poison moves to completely ignore immunities
@@ -614,6 +613,9 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			if (move.id === 'venoshock') {
 				this.debug('Blight Curse Venoshock boost');
 				return this.chainModify(3); 
+			}
+			if(move.type === 'poison'){
+				return this.chainModify(1.5);
 			}
 		},
 	},
