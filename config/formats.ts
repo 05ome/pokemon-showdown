@@ -193,36 +193,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     },
 
     // HARD LOCK: Prevent weather changes
-    onSetWeather(target, source, weather) {
-      if (this.field.weather) {
-        this.add('-fail', source || target, '[from] locked weather');
-        return false;
-      }
-    },
-
-    // HARD LOCK: Prevent terrain changes
-    onSetTerrain(target, source, terrain) {
-      if (this.field.terrain) {
-        this.add('-fail', source || target, '[from] locked terrain');
-        return false;
-      }
-    },
-
-    // Optional: block common setup moves explicitly (extra safety)
-    onTryMove(pokemon, target, move) {
-      const weatherMoves = ['raindance', 'sunnyday', 'sandstorm', 'snowscape'];
-      const terrainMoves = [
-        'electricterrain',
-        'grassyterrain',
-        'mistyterrain',
-        'psychicterrain',
-      ];
-
-      if (weatherMoves.includes(move.id) || terrainMoves.includes(move.id)) {
-        this.add('-fail', pokemon);
-        return false;
-      }
-    },
+    
   },
 
 	// S/V Doubles
