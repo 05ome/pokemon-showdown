@@ -168,33 +168,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     	debug: true,
     	battle: {trunc: Math.trunc},
     	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
-		onBegin() {
-      // Use first active Pokémon as a valid source
-      const source = this.sides[0].active[0];
-
-      if (source) {
-        // Set permanent weather
-        this.field.setWeather(
-          'desolateland',
-          source,
-          this.dex.conditions.get('desolateland')
-        );
-
-        // Set permanent terrain
-        this.field.setTerrain(
-          'electricterrain',
-          source,
-          this.dex.conditions.get('electricterrain')
-        );
-      }
-
-      // Optional clean message (no source attribution)
-      this.add('-message', 'The battlefield is permanently altered!');
-    },
-
-    // HARD LOCK: Prevent weather changes
-    
-  },
+	},
 
 	// S/V Doubles
 	///////////////////////////////////////////////////////////////////
