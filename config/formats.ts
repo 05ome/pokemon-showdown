@@ -169,8 +169,17 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     	battle: {trunc: Math.trunc},
     	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
 		onBegin() {
-    		this.field.addPseudoWeather('mypermanentsun');
-	  },
+	  		// Bypass setWeather() to avoid the source.getSlot() call
+  			this.field.weather = 'sunnyday';
+  			this.field.weatherState = {
+    			id: 'sunnyday',
+    			duration: -1,
+    			source: null,
+	    		sourceSlot: undefined,
+    			target: this.field,
+  			} as any;
+  			this.field.addPseudoWeather('mypermanentsun'); // still add your lock
+		},
 	},
 
 	// S/V Doubles
