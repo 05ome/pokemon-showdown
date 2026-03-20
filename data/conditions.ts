@@ -585,7 +585,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		
 		// 1. Intercepts healing and turns it into damage
 		onTryHeal(damage, target, source, effect) {
-			if(source.hasAbility('Poison Heal')) return;
+			if(target.hasAbility('Poison Heal')) return;
 			this.add('-message', `The blight corrupted the healing!`);
 			this.damage(damage, target, source, effect);
 			return this.chainModify(-1); 
