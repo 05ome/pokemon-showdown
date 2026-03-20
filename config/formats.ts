@@ -171,7 +171,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 		onBegin() {
   			this.field.setWeather('desolateland'); // example weather
   			this.field.setTerrain('electricterrain'); // optional terrain
-}
+},
 	},
 
 	// S/V Doubles
