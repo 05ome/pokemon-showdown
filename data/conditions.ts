@@ -606,18 +606,6 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				return 1; 
 			}
 		},
-
-		// 4. Attacker Logic: Triples Venoshock's Base Power
-		onBasePowerPriority: 6,
-		onBasePower(basePower, attacker, defender, move) {
-			if (move.id === 'venoshock') {
-				this.debug('Blight Curse Venoshock boost');
-				return this.chainModify(3); 
-			}
-			if(move.type === 'poison'){
-				return this.chainModify(1.5);
-			}
-		},
 	},
 	sunnyday: {
 		name: 'SunnyDay',

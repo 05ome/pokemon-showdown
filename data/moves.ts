@@ -22394,7 +22394,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			},
 			onAnyBasePowerPriority: 6,
 			onAnyBasePower(basePower, attacker, defender, move) {
-				if (move.id === 'venoshock') return this.chainModify(3); 
+				if (move.type === 'Poison') return this.chainModify(1.5); 
 			},
 			onEnd() {
 				this.add('-fieldend', 'move: Blight Terrain');
