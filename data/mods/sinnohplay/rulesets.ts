@@ -7,27 +7,24 @@ export const Rulesets: import('../../../sim/dex-formats').ModdedFormatDataTable 
 			this.add('clearpoke');
 			
 			for (const side of this.sides) {
-				let firstPokemon = true;
-				
-				for (const pokemon of side.pokemon) {
-					// Scrub the shiny data to prevent leaks
+				for (let i = 0; i < side.pokemon.length; i++) {
+					const pokemon = side.pokemon[i];
 					const details = pokemon.details.replace(/(, |-)shiny/, '');
 					
-					// Trigger the split protocol for this specific Pokémon slot
+					// Trigger the split protocol
 					this.add(`|split|${side.id}`);
 					
 					// 1. What the owner sees (Their real Pokémon)
 					this.add('poke', side.id, details, pokemon.item ? 'item' : '');
 					
-					// 2. What the opponent and spectators see
-					if (firstPokemon) {
-						// Render exactly ONE mystery block
-						this.add('poke', side.id, 'MissingNo., L100', '');
-						firstPokemon = false;
+					// 2. What the opponent sees
+					if (i === 0) {
+						// The first slot renders a single Poké Ball
+						this.add('poke', side.id, 'unknown', '');
 					} else {
-						// For the other 5 slots, send a harmless debug string. 
-						// The protocol requires a line here, but the client will ignore it and draw nothing!
-						this.add('debug', 'Hidden slot'); 
+						// The other 5 slots are sent a hidden debug message.
+						// This satisfies the split protocol without drawing anything on screen.
+						this.add('debug', 'hidden pokemon slot'); 
 					}
 				}
 			}
