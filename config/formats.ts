@@ -163,19 +163,11 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Sinnoh Play",
-    	mod: 'gen9',
+    	mod: 'sinnohplay',
 		searchShow: false,
     	debug: true,
     	battle: {trunc: Math.trunc},
-    	ruleset: ['Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100', 'Team Preview'],
-    	onTeamPreview() {
-	        this.add('clearpoke');
-        	for (const pokemon of this.getAllPokemon()) {
-	            // This hides the species for EVERYONE in the "Team Preview" top bar icons
-            	this.add('poke', pokemon.side.id, "-*", pokemon.item ? 'item' : '');
-        	} 
-        // The engine sends the private lead-selection request automatically right after this!
-    },
+    	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100', 'Team Preview','Cancel Mod'],
 	},
 
 	// S/V Doubles

@@ -137,7 +137,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		name: "Charizard-Mega-Z",
 		baseSpecies: "Charizard",
 		forme: "Mega-Z",
-		types: ["Dark", "Ghost"],
+		types: ["Dragon", "Fire"],
 		baseStats: { hp: 78, atk: 160, def: 100, spa: 160, spd: 100, spe: 152 },
 		abilities: { 0: "Desolate Land" },
 		heightm: 1.9,
