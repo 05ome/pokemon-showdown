@@ -22290,7 +22290,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					return false; 
 				}
 			},
-			onEnd() {
+			onFieldEnd() {
 				this.add('-fieldend', 'move: Volcanic Terrain');
 			},
 		},
@@ -22338,9 +22338,10 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				this.singleEvent('End', pokemon.getAbility(), pokemon.abilityState, pokemon);
 				pokemon.addVolatile('umbralcurse');
 			},
-			onEnd() {
-				this.add('-fieldend', 'move: Umbral Terrain');
+			onFieldEnd() {
 				for (const mon of this.getAllActive()) mon.removeVolatile('umbralcurse');
+				this.add('-fieldend', 'move: Umbral Terrain');
+				
 			},
 		},
 		secondary: null,
@@ -22396,9 +22397,9 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			onAnyBasePower(basePower, attacker, defender, move) {
 				if (move.type === 'Poison') return this.chainModify(1.5); 
 			},
-			onEnd() {
-				this.add('-fieldend', 'move: Blight Terrain');
+			onFieldEnd() {
 				for (const mon of this.getAllActive()) mon.removeVolatile('blightcurse');
+				this.add('-fieldend', 'move: Blight Terrain');
 			},
 		},
 		secondary: null,
@@ -22442,9 +22443,9 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			onAnyBasePower(basePower, attacker, defender, move) {
 				if (move.type === 'Ground') return this.chainModify(1.5);
 			},
-			onEnd() {
-				this.add('-fieldend', 'move: Tectonic Terrain');
+			onFieldEnd() {
 				for (const mon of this.getAllActive()) mon.removeVolatile('tectoniccurse');
+				this.add('-fieldend', 'move: Tectonic Terrain');
 			},
 		},
 		secondary: null,
