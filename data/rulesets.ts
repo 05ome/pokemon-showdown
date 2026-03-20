@@ -631,6 +631,26 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			return problems;
 		},
 	},
+	blindteampreview: {
+		effectType: 'Rule',
+		name: 'Blind Team Preview',
+		desc: "Allows players to choose their lead without seeing the opponent's team.",
+		onTeamPreview() {
+			this.add('clearpoke');
+			for (const pokemon of this.getAllPokemon()) {
+				const details = pokemon.details.replace(', shiny', '')
+					.replace(/(Arceus|Gourgeist|Pumpkaboo|Xerneas|Silvally|Urshifu|Dudunsparce)(-[a-zA-Z?-]+)?/g, '$1-*')
+					.replace(/(Zacian|Zamazenta)(?!-Crowned)/g, '$1-*'); // Hides formes
+				
+				// The |split| command sends the next line only to the specified player, 
+				// and the line after that to everyone else (the opponent).
+				this.add(`|split|${pokemon.side.id}`);
+				this.add('poke', pokemon.side.id, details, pokemon.item ? 'item' : '');
+				this.add(''); // Opponent receives nothing for this slot
+			}
+			this.makeRequest('teampreview');
+		},
+	},
 	teampreview: {
 		effectType: 'Rule',
 		name: 'Team Preview',

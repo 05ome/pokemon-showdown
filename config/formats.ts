@@ -163,7 +163,7 @@ export const Formats: import('../sim/dex-formats').FormatList = [
 	},
 	{
 		name: "[Gen 9] Sinnoh Play",
-    	mod: 'sinnohplay',
+    	mod: 'gen9',
 		searchShow: false,
     	debug: true,
     	battle: {trunc: Math.trunc},
