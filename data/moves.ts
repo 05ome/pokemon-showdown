@@ -22106,7 +22106,6 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			duration: 5,
 			durationCallback(source, effect) {
 				if (source?.hasItem('terrainextender')) return 8;
-				else if(source?.hasAbility('ghastlysurge')) return 30;
 				return 5;
 			},
 
