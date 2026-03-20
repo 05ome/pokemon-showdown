@@ -22368,11 +22368,13 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					pokemon.addVolatile('blightcurse');
 				}
 			},
-			onAnySwitchIn(pokemon) {
-				if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
-					pokemon.setStatus('tox', pokemon.side.foe.active[0]);
+			onFieldResidual(field,source,effect){
+				for(const pokemon of this.getAllActive()){
+					if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
+						pokemon.setStatus('tox', source);
+					}
+					pokemon.addVolatile('blightcurse');
 				}
-				pokemon.addVolatile('blightcurse');
 			},
 			onAnyModifyMove(move, attacker, defender) {
 				if (move.type === 'Poison') {
