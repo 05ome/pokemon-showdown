@@ -3291,20 +3291,32 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 		name: 'Locked Terrain Rule',
 		desc: "The battle begins with a permanent terrain that cannot be changed.",
 		onBegin() {
-			// Grab the first Pokémon on Player 1's team to act as the "source"
+			// 1. Set the initial terrain using Player 1's first Pokemon as the source
 			const starter = this.sides[0].pokemon[0];
-			
-			// Pass the starter as the source so the engine doesn't crash
 			this.field.setTerrain('volcanicterrain', starter, this.effect);
 			this.add('-message', "A primordial energy locks the terrain!");
-		},
-		
-		// @ts-ignore: Showdown's engine handles this dynamically
-		onAnySetTerrain(target, source, terrain) {
-			if (terrain.id !== 'volcanicterrain') {
-				this.add('-message', "The locked terrain cannot be overridden!");
+
+			// 2. THE NUCLEAR OPTION: Hijack the field's terrain methods
+			const originalSetTerrain = this.field.setTerrain.bind(this.field);
+			
+			// @ts-ignore: We are forcefully overwriting the instance method
+			this.field.setTerrain = (status, source, sourceEffect) => {
+				const targetTerrain = this.dex.conditions.get(status);
+				// If anything tries to set a terrain that isn't ours, block it
+				if (targetTerrain.id && targetTerrain.id !== 'volcanicterrain') {
+					this.add('-message', `The primordial energy crushes the attempt to set ${targetTerrain.name}!`);
+					return false; 
+				}
+				// Otherwise, let it proceed (in case the engine needs to re-verify our terrain)
+				return originalSetTerrain(status, source, sourceEffect);
+			};
+
+			// 3. Block moves like Ice Spinner and Defog from wiping it out
+			// @ts-ignore
+			this.field.clearTerrain = () => {
+				this.add('-message', "The primordial terrain is too deeply rooted to be cleared!");
 				return false; 
-			}
+			};
 		},
 	},
 };
