@@ -3286,4 +3286,22 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			if (!speciesMods.length) throw new Error('This format has no rules that modify base stats.');
 		},
 	},
+	lockedterrainrule: {
+		effectType: 'Rule',
+		name: 'Locked Terrain Rule',
+		desc: "The battle begins with a permanent terrain that cannot be changed.",
+		onBegin() {
+			// This fires the millisecond the battle starts
+			this.field.setTerrain('volcanicterrain');
+			this.add('-message', "A primordial energy locks the terrain!");
+		},
+		// This hook catches any attempt to set a new terrain and crushes it
+		onSetTerrain(target, source, effect, terrain) {
+			// If it's anything OTHER than our locked terrain, block it
+			if (terrain.id !== 'volcanicterrain') {
+				this.add('-message', "The locked terrain cannot be overridden!");
+				return false; // Returning false cancels the new terrain
+			}
+		},
+	}
 };
