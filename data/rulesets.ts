@@ -3290,6 +3290,7 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 		effectType: 'Rule',
 		name: 'Locked Terrain Rule',
 		desc: "The battle begins with a permanent terrain that cannot be changed.",
+		duration: 0,
 		onBegin() {
 			// 1. Set the initial terrain using Player 1's first Pokemon as the source
 			const starter = this.sides[0].pokemon[0];
