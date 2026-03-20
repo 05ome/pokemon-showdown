@@ -168,6 +168,9 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     	debug: true,
     	battle: {trunc: Math.trunc},
     	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
+		onBegin() {
+    		this.field.addPseudoWeather('mypermanentsun');
+	  },
 	},
 
 	// S/V Doubles

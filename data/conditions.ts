@@ -589,6 +589,23 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			this.add('-weather', 'none');
 		},
 	},
+	mypermanentsun: {
+    	name: 'mypermanentsun',
+    	// Re-set actual sun each turn so nothing can displace it
+    	onFieldStart() {
+      	this.field.setWeather('sunnyday');
+    	},
+    	onFieldResidual() {
+      	if (this.field.weather !== 'sunnyday') {
+	        this.field.setWeather('sunnyday');
+      	}
+      	this.field.weatherMinTimeLeft = 5;
+      	this.field.weatherTimeLeft = 5; // reset timer so it never ends
+    	},
+    	onSetWeather(target, source, weather) {
+      	if (weather.id !== 'sunnyday') return false;
+    	},
+  	},
 	desolateland: {
 		name: 'DesolateLand',
 		effectType: 'Weather',
