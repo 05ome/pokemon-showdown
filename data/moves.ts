@@ -22180,7 +22180,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 					this.add('-fieldstart', 'Ghost Terrain');
 				}
 				if(source?.hasAbility('ghastlysurge')){
-					this.add('-message', 'Ghost Terrain has been setup for eternity, The Haunting ensues!')
+					this.add('-message', 'Ghost Terrain has been setup.')
 				}
 			},
 			onFieldEnd() {
@@ -22287,7 +22287,6 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			onChargeMove(pokemon, target, move) {
 				// Skips the charge turn for Solar Beam and Solar Blade
 				if (move.id === 'solarbeam' || move.id === 'solarblade') {
-					this.add('-buildin', pokemon);
 					return false; 
 				}
 			},
@@ -22314,56 +22313,27 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			effectType: 'Terrain',
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source?.hasItem('terrainextender')) {
-					return 8;
-				}
+				if (source?.hasItem('terrainextender')) return 8;
 				return 5;
 			},
-			
-			// 1. Healing moves don't work
-			onAnyTryHeal(damage, target, source, effect) {
-				this.add('-message', "The umbral aura suffocates the healing attempt!");
-				return false;
-			},
-			
-			// 2. Stat boosts don't work (Prevents gaining NEW boosts)
-			onAnyTryBoost(boost, target, source, effect) { // <-- Changed from onAnyBoost to onAnyTryBoost
-				let showMsg = false;
-				for (let i in boost) {
-					// @ts-ignore
-					if (boost[i] > 0) {
-						// @ts-ignore
-						delete boost[i];
-						showMsg = true;
-					}
-				}
-				if (showMsg && !(effect as ActiveMove).secondaries) {
-					this.add('-message', "The umbral aura crushes the stat boost!");
-				}
-			},
-			
-			// 2.5. Stat boosts don't work (Ignores EXISTING boosts)
-			onAnyModifyMove(move) {
-				move.ignoreOffensive = true;
-				move.ignoreDefensive = true;
-			},
-
-			// Merged onSet messages into onFieldStart along with the ability/item wipe
 			onFieldStart(field, source, effect) {
 				this.add('-fieldstart', 'move: Umbral Terrain');
 				this.add('-message', "An oppressive shadow falls! Abilities, items, stat boosts, and healing are nullified!");
-				
+
 				for (const mon of this.getAllActive()) {
 					this.singleEvent('End', mon.getItem(), mon.itemState, mon);
 					this.singleEvent('End', mon.getAbility(), mon.abilityState, mon);
+					mon.addVolatile('umbralcurse');
 				}
 			},
 			onAnySwitchIn(pokemon) {
 				this.singleEvent('End', pokemon.getItem(), pokemon.itemState, pokemon);
 				this.singleEvent('End', pokemon.getAbility(), pokemon.abilityState, pokemon);
+				pokemon.addVolatile('umbralcurse');
 			},
 			onEnd() {
 				this.add('-fieldend', 'move: Umbral Terrain');
+				for (const mon of this.getAllActive()) mon.removeVolatile('umbralcurse');
 			},
 		},
 		secondary: null,
@@ -22385,68 +22355,41 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			effectType: 'Terrain',
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source?.hasItem('terrainextender')) {
-					return 8;
-				}
+				if (source?.hasItem('terrainextender')) return 8;
 				return 5;
 			},
-
-			// Merged onSet messages into onFieldStart along with the Toxic status applicator
 			onFieldStart(field, source, effect) {
 				this.add('-fieldstart', 'move: Blight Terrain');
 				this.add('-message', "A toxic miasma engulfs the battlefield! Healing is corrupted!");
-
 				for (const pokemon of this.getAllActive()) {
 					if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
 						pokemon.setStatus('tox', source);
 					}
+					pokemon.addVolatile('blightcurse');
 				}
 			},
 			onAnySwitchIn(pokemon) {
 				if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
 					pokemon.setStatus('tox', pokemon.side.foe.active[0]);
 				}
+				pokemon.addVolatile('blightcurse');
 			},
-
-			// 2. Poison is Super Effective against Steel
 			onAnyModifyMove(move, attacker, defender) {
 				if (move.type === 'Poison') {
 					if (!move.ignoreImmunity) move.ignoreImmunity = {};
-					if (move.ignoreImmunity !== true) {
-						move.ignoreImmunity['Poison'] = true;
-					}
+					if (move.ignoreImmunity !== true) move.ignoreImmunity['Poison'] = true;
 				}
 			},
 			onAnyEffectiveness(typeMod, target, type, move) {
-				if (move?.type === 'Poison' && type === 'Steel') {
-					return 1; 
-				}
+				if (move?.type === 'Poison' && type === 'Steel') return 1; 
 			},
-
-			// 3. Venoshock BP is tripled
 			onAnyBasePowerPriority: 6,
 			onAnyBasePower(basePower, attacker, defender, move) {
-				if (move.id === 'venoshock') {
-					this.debug('Blight Terrain Venoshock boost');
-					return this.chainModify(3); 
-				}
+				if (move.id === 'venoshock') return this.chainModify(3); 
 			},
-
-			// 4. Healing harms you 
-			onAnyTryHeal(damage, target, source, effect) {
-				// I left the Poison Heal exception commented out below. 
-				// Remove the "//" on the next 3 lines if you want Poison Heal to work normally:
-				if (target.hasAbility('poisonheal')) {
-					return; 
-				}
-
-				this.add('-message', `The blight corrupted the healing!`);
-				this.damage(damage, target, source, effect);
-				return 0; 
-			},
-
 			onEnd() {
 				this.add('-fieldend', 'move: Blight Terrain');
+				for (const mon of this.getAllActive()) mon.removeVolatile('blightcurse');
 			},
 		},
 		secondary: null,
@@ -22467,63 +22410,26 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			effectType: 'Terrain',
 			duration: 5,
 			durationCallback(source, effect) {
-				if (source?.hasItem('terrainextender')) {
-					return 8;
-				}
+				if (source?.hasItem('terrainextender')) return 8;
 				return 5;
 			},
-
-			// I replaced 'onSet' with 'onFieldStart' to fix the TS error
 			onFieldStart(field, source, effect) {
 				this.add('-fieldstart', 'move: Tectonic Terrain');
 				this.add('-message', "The battlefield violently fractures! All Pokémon are grounded!");
-			},
-
-			// 1. Heavy Switch-in Penalty (1/4 Max HP)
-			onAnySwitchIn(pokemon) {
-				if (!pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
-					this.add('-message', `The violently shifting earth batters ${pokemon.name}!`);
-					this.damage(pokemon.baseMaxhp / 4, pokemon);
+				for (const pokemon of this.getAllActive()) {
+					pokemon.addVolatile('tectoniccurse');
 				}
 			},
-
-			// 2. Ground-type moves boosted by 1.5x
+			onAnySwitchIn(pokemon) {
+				pokemon.addVolatile('tectoniccurse');
+			},
 			onAnyBasePowerPriority: 6,
 			onAnyBasePower(basePower, attacker, defender, move) {
-				if (move.type === 'Ground') {
-					this.debug('Tectonic Terrain boost');
-					return this.chainModify(1.5);
-				}
-			},
-
-			// 3. Grounding Flying and Levitate Pokémon
-			onAnyModifyMove(move, attacker, defender) {
-				if (move.type === 'Ground') {
-					// Force the move to ignore Ground immunities (Levitate, Air Balloon, etc.)
-					if (!move.ignoreImmunity) move.ignoreImmunity = {};
-					if (move.ignoreImmunity !== true) {
-						move.ignoreImmunity['Ground'] = true;
-					}
-				
-					// Inject the Speed drop secondary effect
-					if (move.category !== 'Status') {
-						if (!move.secondaries) move.secondaries = [];
-						move.secondaries.push({
-							chance: 100,
-							boosts: {
-								spe: -1,
-							},
-						});
-					}
-				}
-			},
-			onAnyEffectiveness(typeMod, target, type, move) {
-				if (move.type === 'Ground' && type === 'Flying') {
-					return 0; 
-				}
+				if (move.type === 'Ground') return this.chainModify(1.5);
 			},
 			onEnd() {
 				this.add('-fieldend', 'move: Tectonic Terrain');
+				for (const mon of this.getAllActive()) mon.removeVolatile('tectoniccurse');
 			},
 		},
 		secondary: null,

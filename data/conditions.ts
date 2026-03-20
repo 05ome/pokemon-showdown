@@ -543,6 +543,80 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			this.add('-weather', 'none');
 		},
 	},
+	tectoniccurse: {
+		name: 'Tectonic Curse',
+		noCopy: true,
+		onStart(pokemon) {
+			if (!pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
+				this.add('-message', `The violently shifting earth batters ${pokemon.name}!`);
+				this.damage(pokemon.baseMaxhp / 4, pokemon);
+			}
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (move.type === 'Ground') {
+				this.boost({spe: -1}, target, source, move);
+			}
+		},
+	},
+	umbralcurse: {
+		name: 'Umbral Curse',
+		noCopy: true,
+		onTryHeal(damage, target, source, effect) {
+			this.add('-message', "The umbral aura suffocates the healing attempt!");
+			return false;
+		},
+		onTryBoost(boost, target, source, effect) {
+			let showMsg = false;
+			for (let i in boost) {
+				// @ts-ignore
+				if (boost[i] > 0) {
+					// @ts-ignore
+					delete boost[i];
+					showMsg = true;
+				}
+			}
+			if (showMsg && !(effect as ActiveMove).secondaries) {
+				this.add('-message', "The umbral aura crushes the stat boost!");
+			}
+		},
+	},
+	blightcurse: {
+		name: 'Blight Curse',
+		noCopy: true,
+		
+		// 1. Intercepts healing and turns it into damage
+		onTryHeal(damage, target, source, effect) {
+			if(source.hasAbility('Poison Heal')) return;
+			this.add('-message', `The blight corrupted the healing!`);
+			this.damage(damage, target, source, effect);
+			return 0; 
+		},
+
+		// 2. Attacker Logic: Forces Poison moves to completely ignore immunities
+		onModifyMovePriority: -5,
+		onModifyMove(move) {
+			if (move.type === 'Poison') {
+				move.ignoreImmunity = true;
+			}
+		},
+
+		// 3. Defender Logic: If the target is Steel, Poison moves hit for 2x Super Effective
+		onEffectiveness(typeMod, target, type, move) {
+			// This tells the engine to treat the specific Steel typing as weak to Poison
+			if (move && move.type === 'Poison' && type === 'Steel') {
+				return 1; 
+			}
+		},
+
+		// 4. Attacker Logic: Triples Venoshock's Base Power
+		onBasePowerPriority: 6,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.id === 'venoshock') {
+				this.debug('Blight Curse Venoshock boost');
+				return this.chainModify(3); 
+			}
+		},
+	},
 	sunnyday: {
 		name: 'SunnyDay',
 		effectType: 'Weather',
