@@ -3291,17 +3291,20 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 		name: 'Locked Terrain Rule',
 		desc: "The battle begins with a permanent terrain that cannot be changed.",
 		onBegin() {
-			// This fires the millisecond the battle starts
-			this.field.setTerrain('volcanicterrain');
+			// Grab the first Pokémon on Player 1's team to act as the "source"
+			const starter = this.sides[0].pokemon[0];
+			
+			// Pass the starter as the source so the engine doesn't crash
+			this.field.setTerrain('volcanicterrain', starter, this.effect);
 			this.add('-message', "A primordial energy locks the terrain!");
 		},
-		// This hook catches any attempt to set a new terrain and crushes it
-		onSetTerrain(target, source, effect, terrain) {
-			// If it's anything OTHER than our locked terrain, block it
+		
+		// @ts-ignore: Showdown's engine handles this dynamically
+		onAnySetTerrain(target, source, terrain) {
 			if (terrain.id !== 'volcanicterrain') {
 				this.add('-message', "The locked terrain cannot be overridden!");
-				return false; // Returning false cancels the new terrain
+				return false; 
 			}
 		},
-	}
+	},
 };
