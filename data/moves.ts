@@ -22393,9 +22393,18 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 			onAnyEffectiveness(typeMod, target, type, move) {
 				if (move?.type === 'Poison' && type === 'Steel') return 1; 
 			},
-			onAnyBasePowerPriority: 6,
-			onAnyBasePower(basePower, attacker, defender, move) {
-				if (move.type === 'Poison') return this.chainModify(1.5); 
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+			// Venoshock gets the massive 3x multiplier
+				if (move.id === 'venoshock' && attacker.isGrounded()) {
+					this.debug('Blight Terrain Venoshock boost');
+					return this.chainModify(3); 
+				}
+				// All other Poison moves get the standard 1.5x boost
+				if (move.type === 'Poison' && attacker.isGrounded()) {
+					this.debug('Blight Terrain boost');
+					return this.chainModify(1.5);
+				}
 			},
 			onFieldEnd() {
 				for (const mon of this.getAllActive()) mon.removeVolatile('blightcurse');
@@ -22440,8 +22449,12 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				}
 			},
 			onAnyBasePowerPriority: 6,
-			onAnyBasePower(basePower, attacker, defender, move) {
-				if (move.type === 'Ground') return this.chainModify(1.5);
+			onBasePowerPriority: 6,
+			onBasePower(basePower, attacker, defender, move) {
+				if (move.type === 'Ground' && attacker.isGrounded()) {
+					this.debug('Tectonic Terrain boost');
+					return this.chainModify(1.5); // 1.5x damage boost
+				}
 			},
 			onFieldEnd() {
 				for (const mon of this.getAllActive()) mon.removeVolatile('tectoniccurse');
