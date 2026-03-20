@@ -22390,45 +22390,63 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 				}
 				return 5;
 			},
-			// Replaced onSet with onFieldStart
+
+			// Merged onSet messages into onFieldStart along with the Toxic status applicator
 			onFieldStart(field, source, effect) {
-				this.add('-fieldstart', 'move: Volcanic Terrain');
-			},
-			onBasePowerPriority: 6,
-			onBasePower(basePower, attacker, defender, move) {
-				if (attacker.isGrounded() && !attacker.isSemiInvulnerable()) {
-					if (move.type === 'Fire') {
-						this.debug('volcanic terrain boost');
-						return this.chainModify(1.5); 
-					}
-					if (move.type === 'Water') {
-						this.debug('volcanic terrain weaken');
-						return this.chainModify(0.25); 
+				this.add('-fieldstart', 'move: Blight Terrain');
+				this.add('-message', "A toxic miasma engulfs the battlefield! Healing is corrupted!");
+
+				for (const pokemon of this.getAllActive()) {
+					if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
+						pokemon.setStatus('tox', source);
 					}
 				}
 			},
 			onAnySwitchIn(pokemon) {
-				if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasItem('heavydutyboots') && !pokemon.hasAbility('magicguard')) {
-					this.damage(pokemon.baseMaxhp / 16, pokemon);
+				if (!pokemon.hasType('Poison') && pokemon.isGrounded()) {
+					pokemon.setStatus('tox', pokemon.side.foe.active[0]);
 				}
 			},
-			onFieldResidualOrder: 27,
-			onFieldResidualSubOrder: 7,
-			onFieldResidual() {
-				for (const pokemon of this.getAllActive()) {
-					if (!pokemon.hasType('Fire') && pokemon.isGrounded() && !pokemon.hasAbility('magicguard')) {
-						this.damage(pokemon.baseMaxhp / 16, pokemon);
+
+			// 2. Poison is Super Effective against Steel
+			onAnyModifyMove(move, attacker, defender) {
+				if (move.type === 'Poison') {
+					if (!move.ignoreImmunity) move.ignoreImmunity = {};
+					if (move.ignoreImmunity !== true) {
+						move.ignoreImmunity['Poison'] = true;
 					}
 				}
 			},
-			onChargeMove(pokemon, target, move) {
-				if (move.id === 'solarbeam' || move.id === 'solarblade') {
-					this.add('-buildin', pokemon);
-					return false; 
+			onAnyEffectiveness(typeMod, target, type, move) {
+				if (move?.type === 'Poison' && type === 'Steel') {
+					return 1; 
 				}
 			},
+
+			// 3. Venoshock BP is tripled
+			onAnyBasePowerPriority: 6,
+			onAnyBasePower(basePower, attacker, defender, move) {
+				if (move.id === 'venoshock') {
+					this.debug('Blight Terrain Venoshock boost');
+					return this.chainModify(3); 
+				}
+			},
+
+			// 4. Healing harms you 
+			onAnyTryHeal(damage, target, source, effect) {
+				// I left the Poison Heal exception commented out below. 
+				// Remove the "//" on the next 3 lines if you want Poison Heal to work normally:
+				if (target.hasAbility('poisonheal')) {
+					return; 
+				}
+
+				this.add('-message', `The blight corrupted the healing!`);
+				this.damage(damage, target, source, effect);
+				return 0; 
+			},
+
 			onEnd() {
-				this.add('-fieldend', 'move: Volcanic Terrain');
+				this.add('-fieldend', 'move: Blight Terrain');
 			},
 		},
 		secondary: null,
@@ -22440,7 +22458,7 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		accuracy: true,
 		basePower: 0,
 		category: "Status",
-		name: "Tectonic Domain",
+		name: "Tectonic Terrain",
 		pp: 10,
 		priority: 0,
 		flags: {nonsky: 1},
