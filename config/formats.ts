@@ -169,10 +169,61 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     	battle: {trunc: Math.trunc},
     	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
 		onBegin() {
-  			this.field.setWeather('desolateland'); // example weather
-  			this.field.setTerrain('electricterrain'); // optional terrain
-},
-	},
+      // Use first active Pokémon as a valid source
+      const source = this.sides[0].active[0];
+
+      if (source) {
+        // Set permanent weather
+        this.field.setWeather(
+          'desolateland',
+          source,
+          this.dex.conditions.get('desolateland')
+        );
+
+        // Set permanent terrain
+        this.field.setTerrain(
+          'electricterrain',
+          source,
+          this.dex.conditions.get('electricterrain')
+        );
+      }
+
+      // Optional clean message (no source attribution)
+      this.add('-message', 'The battlefield is permanently altered!');
+    },
+
+    // HARD LOCK: Prevent weather changes
+    onSetWeather(target, source, weather) {
+      if (this.field.weather) {
+        this.add('-fail', source || target, '[from] locked weather');
+        return false;
+      }
+    },
+
+    // HARD LOCK: Prevent terrain changes
+    onSetTerrain(target, source, terrain) {
+      if (this.field.terrain) {
+        this.add('-fail', source || target, '[from] locked terrain');
+        return false;
+      }
+    },
+
+    // Optional: block common setup moves explicitly (extra safety)
+    onTryMove(pokemon, target, move) {
+      const weatherMoves = ['raindance', 'sunnyday', 'sandstorm', 'snowscape'];
+      const terrainMoves = [
+        'electricterrain',
+        'grassyterrain',
+        'mistyterrain',
+        'psychicterrain',
+      ];
+
+      if (weatherMoves.includes(move.id) || terrainMoves.includes(move.id)) {
+        this.add('-fail', pokemon);
+        return false;
+      }
+    },
+  },
 
 	// S/V Doubles
 	///////////////////////////////////////////////////////////////////
