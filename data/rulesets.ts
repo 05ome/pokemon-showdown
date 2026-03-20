@@ -636,21 +636,29 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 		name: 'Blind Team Preview',
 		desc: "Allows players to choose their lead without seeing the opponent's team.",
 		onTeamPreview() {
-			this.add('clearpoke');
-			for (const pokemon of this.getAllPokemon()) {
-				const details = pokemon.details.replace(', shiny', '')
-					.replace(/(Arceus|Gourgeist|Pumpkaboo|Xerneas|Silvally|Urshifu|Dudunsparce)(-[a-zA-Z?-]+)?/g, '$1-*')
-					.replace(/(Zacian|Zamazenta)(?!-Crowned)/g, '$1-*');
+		this.add('clearpoke');
+		for (const side of this.sides) {
+			for (const pokemon of side.pokemon) {
+				let details = pokemon.details.replace(', shiny', '')
+					.replace(/(Zacian|Zamazenta)(?!-Crowned)/g, '$1-*')
+					.replace(/(Greninja|Gourgeist|Pumpkaboo|Xerneas|Silvally|Urshifu|Dudunsparce)(-[a-zA-Z?-]+)?/g, '$1-*');
 				
-				// THE FIX: This is the correct Showdown syntax for the split command
-				this.add('split', pokemon.side.id); 
+				// SPLIT MAGIC: 
+				// Line 1 goes to the owner of the Pokémon.
+				// Line 2 goes to the opponent and spectators.
+				this.add('split', pokemon.side.id);
 				
-				// Line 1: The real Pokémon goes to the owner
+				// Owner gets their real Pokémon details to pick a lead
 				this.add('poke', pokemon.side.id, details, pokemon.item ? 'item' : '');
-				// Line 2: A dummy Substitute goes to the opponent
-				this.add('poke', pokemon.side.id, 'Substitute, L100', ''); 
+				
+				// Opponent gets literally nothing. 
+				this.add(''); 
+				}
 			}
-			this.makeRequest('teampreview');
+
+		// (If you want to keep the Tera Type preview from your snippet, you can paste it right here)
+
+		this.makeRequest('teampreview');
 		},
 	},
 	teampreview: {
