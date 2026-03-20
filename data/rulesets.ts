@@ -635,19 +635,23 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 		effectType: 'Rule',
 		name: 'Blind Team Preview',
 		desc: "Allows players to choose their lead without seeing the opponent's team.",
-		onTeamPreview() {
+		onBegin() {
 			this.add('clearpoke');
 			for (const pokemon of this.getAllPokemon()) {
-				const details = pokemon.details.replace(', shiny', '')
+				// We grab the real details for the owner
+				const realDetails = pokemon.details.replace(', shiny', '')
 					.replace(/(Arceus|Gourgeist|Pumpkaboo|Xerneas|Silvally|Urshifu|Dudunsparce)(-[a-zA-Z?-]+)?/g, '$1-*')
-					.replace(/(Zacian|Zamazenta)(?!-Crowned)/g, '$1-*'); // Hides formes
+					.replace(/(Zacian|Zamazenta)(?!-Crowned)/g, '$1-*');
 				
-				// The |split| command sends the next line only to the specified player, 
-				// and the line after that to everyone else (the opponent).
+				// |split| sends the first line to the player, and the second line to the opponent
 				this.add(`|split|${pokemon.side.id}`);
-				this.add('poke', pokemon.side.id, details, pokemon.item ? 'item' : '');
-				this.add(''); // Opponent receives nothing for this slot
+				// Line 1: The real Pokémon goes to the owner
+				this.add('poke', pokemon.side.id, realDetails, pokemon.item ? 'item' : '');
+				// Line 2: A dummy Substitute goes to the opponent and spectators
+				this.add('poke', pokemon.side.id, 'Substitute, L100', ''); 
 			}
+		},
+		onTeamPreview() {
 			this.makeRequest('teampreview');
 		},
 	},
