@@ -3429,6 +3429,13 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onStart(pokemon) {
 			this.singleEvent('WeatherChange', this.effect, this.effectState, pokemon);
 		},
+		onTerrainChange(pokemon) {
+			if (this.field.isTerrain('volcaniccterrain')) {
+				pokemon.addVolatile('protosynthesis');
+			} else if (!pokemon.volatiles['protosynthesis']?.fromBooster) {
+				pokemon.removeVolatile('protosynthesis');
+			}
+		},
 		onWeatherChange(pokemon) {
 			// Protosynthesis is not affected by Utility Umbrella
 			if (this.field.isWeather('sunnyday')) {
