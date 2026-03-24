@@ -5723,4 +5723,124 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -1002,
 	},
+	wukongsstancechange: {
+		onStart(pokemon) {
+			if (pokemon.m.wukongStance === undefined) {
+				pokemon.m.wukongStance = 0; 
+			}
+			const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
+			this.add('-ability', pokemon, 'Wukong\'s Stance Change');
+			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
+		},
+		onDamage(damage, target, source, effect) {
+			if (effect && effect.effectType === 'Move' && effect.id !== 'struggle') {
+				target.m.wukongStance = (target.m.wukongStance + 1) % 4;
+				const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
+				this.add('-message', `${target.name} shifted to the ${stances[target.m.wukongStance]}!`);
+			}
+		},
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			if (attacker.m.wukongStance === 0 && move.type === 'Fire') {
+				return this.chainModify(1.5);
+			}
+			if (attacker.m.wukongStance === 1 && move.type === 'Fighting') {
+				return this.chainModify(1.5);
+			}
+		},
+		onModifyMovePriority: 1, 
+		onModifyMove(move, attacker, defender) {
+			if (attacker.m.wukongStance === 0) {
+				if (defender && defender.hasAbility(['flashfire', 'wellbakedbody'])) {
+					move.ignoreAbility = true;
+				}
+			}
+			if (attacker.m.wukongStance === 2) {
+				if (move.category !== 'Status') {
+					const atk = attacker.getStat('atk', false, true);
+					const spa = attacker.getStat('spa', false, true);
+					if (atk > spa) {
+						move.category = 'Physical';
+					} else if (spa > atk) {
+						move.category = 'Special';
+					}
+				}
+				if (defender) {
+    				// Fluffy ability: ignore only for contact moves
+	    			if (defender.hasAbility(['fluffy']) && move.flags['contact']) {
+        				move.ignoreAbility = true;
+	    			}
+
+			    	// General "survive a hit" and damage reduction abilities
+    				const defensiveAbilities = [
+	        			'sturdy','disguise','iceface','shadowshield','multiscale',
+        				'filter','solidrock','prismarmor','thickfat','heatproof',
+        				'waterbubble','punkrock','icescales','furcoat','marvelscale','grasspelt'
+    				];
+
+    				if (defender.hasAbility(defensiveAbilities)) {
+        				move.ignoreAbility = true;
+    				}
+				}
+			}
+			if (attacker.m.wukongStance === 3) {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					for (const type of this.dex.types.all()) {
+						move.ignoreImmunity[type.name] = true;
+					}
+				}
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			if (source.m.wukongStance === 2) {
+				if (target.getMoveHitData(move).typeMod < 0) {
+					this.debug('Wukong Void Stance boost');
+					return this.chainModify(2);
+				}
+			}
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (target.m.wukongStance === 1 && source && target !== source) {
+				let showMsg = false;
+				let i: BoostID;
+				for (i in boost) {
+					if (boost[i]! < 0) {
+						delete boost[i];
+						showMsg = true;
+					}
+				}
+				if (showMsg && !(effect as ActiveMove).secondaries) {
+					this.add('-fail', target, 'unboost', '[from] ability: Wukong\'s Stance Change', '[of] ' + target);
+				}
+			}
+		},
+		onModifyPriority(priority, pokemon, target, move) {
+			if (pokemon.m.wukongStance === 3) {
+				return priority + 1;
+			}
+		},
+		onFlinch(pokemon) {
+			if (pokemon.m.wukongStance === 3) return false;
+		},
+		onTrapPokemonPriority: -10,
+		onTrapPokemon(pokemon) {
+			if (pokemon.m.wukongStance === 3) {
+				pokemon.trapped = pokemon.maybeTrapped = false;
+			}
+		},
+		onTryHit(target, source, move) {
+			if (target.m.wukongStance === 3 && source !== target) {
+				const conditionalMoves = ['suckerpunch', 'fakeout', 'firstimpression', 'dreameater', 'poltergeist'];
+				if (conditionalMoves.includes(move.id)) {
+					this.add('-immune', target, '[from] ability: Wukong\'s Stance Change');
+					return null;
+				}
+			}
+		},
+		flags:{failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1},
+		name: "Wukong's Stance Change",
+		rating: 5,
+		num: -1003, 
+	},
 };
