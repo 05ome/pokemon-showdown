@@ -3306,7 +3306,6 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 				// If anything tries to set a terrain that isn't ours, block it
 				if (targetTerrain.id && targetTerrain.id !== 'volcanicterrain') {
 					this.add('-message', `The primordial energy crushes the attempt to set ${targetTerrain.name}!`);
-					return false; 
 				}
 				// Otherwise, let it proceed (in case the engine needs to re-verify our terrain)
 				return originalSetTerrain(status, source, sourceEffect);
@@ -3316,7 +3315,7 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			// @ts-ignore
 			this.field.clearTerrain = () => {
 				this.add('-message', "The primordial terrain is too deeply rooted to be cleared!");
-				return false; 
+				return true; 
 			};
 		},
 	},

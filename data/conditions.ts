@@ -562,7 +562,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		noCopy: true,
 		onTryHeal(damage, target, source, effect) {
 			this.add('-message', "The umbral aura suffocates the healing attempt! Your Healing attempt is NULL");
-			return false;
+			return 0;
 		},
 		onTryBoost(boost, target, source, effect) {
 			let showMsg = false;

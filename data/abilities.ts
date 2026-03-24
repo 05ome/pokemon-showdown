@@ -5732,6 +5732,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-ability', pokemon, 'Wukong\'s Stance Change');
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
 		},
+		onDamagePriority: -19,
 		onDamage(damage, target, source, effect) {
 			if (effect && effect.effectType === 'Move' && effect.id !== 'struggle') {
 				target.m.wukongStance = (target.m.wukongStance + 1) % 4;
