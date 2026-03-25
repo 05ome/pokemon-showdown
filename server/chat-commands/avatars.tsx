@@ -525,7 +525,7 @@ const OFFICIAL_AVATARS = new Set([
 	'yellow',
 	'youngcouple-gen3', 'youngcouple-gen3rs', 'youngcouple-gen4dp', 'youngcouple',
 	'youngster-gen1', 'youngster-gen1rb', 'youngster-gen2', 'youngster-gen3', 'youngster-gen3rs', 'youngster-gen4', 'youngster-gen4dp', 'youngster',
-	'zinzolin',
+	'zinzolin', 'thechampion',
 ]);
 
 const OFFICIAL_AVATARS_BELIOT419 = new Set([
