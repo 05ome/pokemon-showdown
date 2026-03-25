@@ -47305,7 +47305,6 @@ export const Learnsets: import('../sim/dex-species').LearnsetDataTable = {
 			aerialace: ["9M", "7M", "6M", "5M", "4M"],
 			agility: ["9M"],
 			pyroball: ["9M"],
-			aurasphere: ["9M"],
 			attract: ["7M", "6M", "5M", "4M"],
 			aurasphere: ["9M"],
 			blastburn: ["9M", "7T", "6T", "5T", "4T"],
