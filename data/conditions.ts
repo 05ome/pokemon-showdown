@@ -606,6 +606,39 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			}
 		},
 	},
+	// The invisible field tracker that watches for the cursed Pokemon
+	thevoidspreads: {
+		onSideStart(side) {
+			this.add('-message', `The void has taken root on this side of the field...`);
+		},
+		onSwitchIn(pokemon) {
+			// If a Pokemon switches in and has the internal cursed flag, re-apply the curse instantly
+			if (pokemon.m.voidCursed) {
+				this.add('-message', `${pokemon.name} cannot escape the void!`);
+				pokemon.addVolatile('thevoidcurse');
+			}
+		},
+	},
+	
+	// The actual damage and stat penalty
+	thevoidcurse: {
+		noCopy: true, 
+		onStart(pokemon) {
+			this.add('-start', pokemon, 'The Void Curse');
+		},
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		onResidual(pokemon) {
+			// 1/8 max HP damage every turn
+			this.damage(pokemon.baseMaxhp / 8);
+		},
+		onModifyDamage(damage, source, target, move) {
+			// Halves all damage dealt by the cursed Pokemon
+			if (source === this.effectState.target) {
+				return this.chainModify(0.5);
+			}
+		},
+	},
 	sunnyday: {
 		name: 'SunnyDay',
 		effectType: 'Weather',
@@ -693,7 +726,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 		effectType: 'Weather',
 		duration: 5,
 		durationCallback(source, effect) {
-			if (source?.hasItem('smoothrock')) {
+			if (source?.hasItem('smoothrock') || source?.hasAbility('primordialterror')) {
 				return 8;
 			}
 			return 5;

@@ -22465,4 +22465,97 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		target: "all",
 		type: "Ground",
 	},
+	venomousexecution: {
+		num: -1007, 
+		accuracy: 100,
+		basePower: 95,
+		category: "Physical",
+		name: "Venomous Execution",
+		pp: 5,
+		priority: 0,
+		critRatio: 2,
+		flags: { contact: 1, protect: 1, mirror: 1, metronome: 1, slicing: 1 },
+		onBasePower(basePower, pokemon, target) {
+			if (target.status === 'psn' || target.status === 'tox') {
+				return this.chainModify(2);
+			}
+		},
+		secondary: null,
+		target: "normal",
+		type: "Dark",
+		contestType: "Beautiful",
+	},
+	earthvastation: {
+		num: -1008,
+		accuracy: 100,
+		basePower: 100,
+		category: "Physical",
+		name: "Earthvastation",
+		pp: 5,
+		priority: 0,
+		flags: { protect: 1, mirror: 1, nonsky: 1, metronome: 1 },
+		onAfterHit(target, source, move) {
+			if (!move.hasSheerForce && source.hp) {
+				for (const side of source.side.foeSidesWithConditions()) {
+					side.addSideCondition('stealthrock');
+				}
+			}
+		},
+		onAfterSubDamage(damage, target, source, move) {
+			if (!move.hasSheerForce && source.hp) {
+				for (const side of source.side.foeSidesWithConditions()) {
+					side.addSideCondition('stealthrock');
+				}
+			}
+		},
+		secondary: {},
+		target: "allAdjacentFoes",
+		type: "Rock",
+	},
+	neutronstarcannon: {
+		num: -1009,
+		accuracy: 100,
+		basePower: 80,
+		category: "Special",
+		name: "Neutron Star Cannon",
+		pp: 5,
+		priority: 0,
+		flags: { protect: 1, mirror: 1, distance: 1, metronome: 1, pulse: 1 },
+		multihit: 2,
+		secondary: null,
+		target: "normal",
+		type: "Fire",
+	},
+	finalseverance: {
+		num: -1010,
+		accuracy: 100,
+		basePower: 90,
+		category: "Physical",
+		name: "Final Severance",
+		pp: 5,
+		priority:0,
+		flags: { protect: 1, mirror: 1, metronome: 1, slicing: 1 },
+		willCrit: true,
+		secondary: null,
+		target: "normal",
+		type: "Fighting",
+	},
+	cynthiaswrath: {
+		num: -1011,
+		accuracy: 100,
+		basePower: 150,
+		category: "Physical",
+		name: "Cynthia's Wrath",
+		pp:5,
+		priority: 0,
+		flags: { protect: 1, mirror: 1, metronome: 1 },
+		ignoreEvasion: true,
+		ignoreImmunity: { 'Fairy': true },
+		secondary: {
+			chance: 30,
+			volatileStatus: 'flinch',
+		},
+		target: "allAdjacentFoes",
+		type: "Dragon",
+	}
 };

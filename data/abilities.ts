@@ -5697,7 +5697,6 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -1000,
 	},
-
 	ghastlysurge: {
 		onStart(source){
 			this.field.setTerrain('ghostterrain');
@@ -5724,7 +5723,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onModifyMovePriority: -1,
 		onModifyMove(move, attacker) {
 			if (move.id === 'watershuriken' && attacker.species.name === 'Greninja-Ash' && !attacker.transformed) {
-				move.multihit = 5;
+				move.multihit = 7;
 			}
 		},
 		onPrepareHit(source, target, move) {
@@ -5760,6 +5759,26 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
 			this.add('-ability', pokemon, 'Wukong\'s Stance Change');
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
+		},
+		onAnyModifySpA(spa, source, target, move) {
+			if (source.m.wukongStance === 0 || source.m.wukongStance === 1){
+				const abilityHolder = this.effectState.target;
+				if (source.hasAbility("Wukong's Stance Change")) return;
+				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;	
+				if (move.ruinedSpA !== abilityHolder) return;
+				this.debug('Wukong SpA drop');
+				return this.chainModify(0.85);
+			}
+		},
+		onAnyModifyAtk(spa, source, target, move) {
+			if (source.m.wukongStance === 0 || source.m.wukongStance === 1){
+				const abilityHolder = this.effectState.target;
+				if (source.hasAbility("Wukong's Stance Change")) return;
+				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;
+				if (move.ruinedSpA !== abilityHolder) return;
+				this.debug('Wukong Atk drop');
+				return this.chainModify(0.85);
+			}
 		},
 		onResidualOrder: 28,
 		onResidualSubOrder: 4,
@@ -5877,5 +5896,358 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Wukong's Stance Change",
 		rating: 5,
 		num: -1003, 
+	},
+	faultline: {
+		onModifyMovePriority: -5,
+		onModifyMove(move) {
+			// Properly bypassing the Ground-type immunity flag
+			if (move.type === 'Electric') {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Ground'] = true; 
+				}
+			}
+		},
+		onTryHitPriority: 1,
+		onTryHit(target, source, move) {
+			// Grants the Ground immunity and the +2 Speed boost
+			if (target !== source && move.type === 'Ground') {
+				if (!this.boost({spe: 2})) {
+					this.add('-immune', target, '[from] ability: Fault Line');
+				}
+				return null;
+			}
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (effect.name === 'Intimidate' && boost.atk) {
+				delete boost.atk;
+				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Fault Line', `[of] ${target}`);
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			// Checks if the move exists and if it makes physical contact
+			if (effect.effectType === "Move" && effect.flags['contact']) {
+				this.field.setTerrain('electricterrain');
+			}
+		},
+		flags: {breakable: 1},
+		name: "Fault Line",
+		rating: 4.5,
+		shortDesc: "User's Electric moves hit Ground. Immunity to Ground moves; raises Speed by 2 stages.",
+	},
+	absorbantarmor: {
+		onTryHitPriority: 1,
+		onTryHit(target, source, move) {
+			// Grants the Ground immunity and the +2 Speed boost
+			if (target !== source && move.type === 'Ground') {
+				if (!this.heal(target.baseMaxhp / 4)) {
+					this.add('-immune', target, '[from] ability: Fault Line');
+				}
+				return null;
+			}
+		},
+		flags: {breakable: 1},
+		name: "Absorbant Armor",
+		rating: 4.5,
+		num: -1004,
+		shortDesc: "Immune to Ground, Heals 1/4.",
+	},
+	tectonicplate: {
+		onSourceModifyAtkPriority: 6,
+		onSourceModifyAtk(atk, attacker, defender, move) {
+			if (move.type === 'Water' || move.type === 'Grass') {
+				this.debug('Tectonic Plate weaken');
+				return this.chainModify(0.25);
+			}
+		},
+		onSourceModifySpAPriority: 5,
+		onSourceModifySpA(atk, attacker, defender, move) {
+			if (move.type === 'Water' || move.type === 'Grass') {
+				this.debug('Tectonic Plate weaken');
+				return this.chainModify(0.25);
+			}
+		},
+		onModifyMove(move, attacker, defender) {
+			if (!defender) return;
+			if (move.category !== 'Status' && move.type === "Rock" && defender !== attacker) {
+				const def = defender.getStat('def', false, true);
+				const spd = defender.getStat('spd', false, true);
+				
+				if (def > spd) {
+					// This keeps the move Physical (using your Attack), but targets SpD.
+					move.overrideDefensiveStat = 'spd';
+					
+					// Remove the contact flag if it had one, making it a projectile
+					if (move.flags.contact) delete move.flags.contact; 
+				}
+			}
+		},
+		flags: {breakable: 1},
+		name: "Tectonic Plate",
+		rating: 4.5,
+		num: -1006,
+		shortDesc: "Water and Grass Resistance.",
+	},
+	siegemode: {
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.flags['pulse'] || move.flags['bullet']) {
+				return this.chainModify(1.5);
+			}
+		},
+		onModifyMove(move) {
+			if (move.flags['pulse'] || move.flags['bullet']) {
+				move.ignoreAbility = true;
+			}
+		},
+		onModifySpDPriority: 6,
+		onModifySpD(spd) {
+			return this.chainModify(2);
+		},
+		flags: {breakable: 1},
+		name: "Siege Mode",
+		rating: 4.5,
+		num: -1005,
+		shortDesc: "Cannon or Bullet moves hit 1.5x. Resists Special Atks",
+	},
+	neuraloverdrive: {
+		onDamage(damage, target, source, effect) {
+			if (effect.effectType !== 'Move') {
+				if (effect.effectType === 'Ability') this.add('-activate', source, 'ability: ' + effect.name);
+				return false;
+			}
+		},
+		onModifyMove(move) {
+			move.ignoreEvasion = true;
+			if (!move.ignoreImmunity) move.ignoreImmunity = {};
+			if (move.ignoreImmunity !== true) {
+				move.ignoreImmunity['Dark'] = true;
+			}
+		},
+		flags: {},
+		name: "Neural Overdrive",
+		rating: 4.5,
+		num: -1007,
+		shortDesc: "Magic Guard. Psychic Hits Dark.",
+	},
+	voidblade: {
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.flags['slicing']) {
+				this.debug('Sharpness boost');
+				return this.chainModify(1.5);
+			}
+		},
+		onModifyMovePriority: -5,
+		onModifyMove(move) {
+			if (!move.ignoreImmunity) move.ignoreImmunity = {};
+			if (move.ignoreImmunity !== true) {
+				move.ignoreImmunity['Fighting'] = true;
+				move.ignoreImmunity['Normal'] = true;
+			}
+			if (move.flags['slicing']) delete move.flags['protect'];
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (effect.name === 'Intimidate' && boost.atk) {
+				delete boost.atk;
+				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Scrappy', `[of] ${target}`);
+			}
+		},
+		flags: {},
+		name: "Void Blade",
+		rating: 4.5,
+		num: -1008,
+	},
+	auraprotector: {
+		onModifyMove(move) {
+			if (!move.ignoreImmunity) move.ignoreImmunity = {};
+			if (move.ignoreImmunity !== true) {
+				move.ignoreImmunity['Fighting'] = true;
+				move.ignoreImmunity['Normal'] = true;
+			}
+			if (move.flags['slicing']) delete move.flags['protect'];
+		},
+		onTryBoost(boost, target, source, effect) {
+			if (effect.name === 'Intimidate' && boost.atk) {
+				delete boost.atk;
+				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Scrappy', `[of] ${target}`);
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			if (target.getMoveHitData(move).crit) {
+				this.debug('Sniper boost');
+				return this.chainModify(1.5);
+			}
+		},
+		onModifyCritRatio(critRatio) {
+			return critRatio + 1;
+		},
+		flags: {},
+		name: "Aura Protector",
+		rating: 4.5,
+		num: -1009,
+	},
+	primordialterror: {
+		onStart(pokemon) {
+			let activated = false;
+			for (const target of pokemon.adjacentFoes()) {
+				if (!activated) {
+					this.add('-ability', pokemon, 'Primordial Terror', 'boost');
+					activated = true;
+				}
+				if (target.volatiles['substitute']) {
+					this.add('-immune', target);
+				} else {
+					this.boost({ atk: -2, spa: -2 }, target, pokemon, null, true);
+				}
+			}
+			this.field.setWeather('sandstorm');
+		},	
+		onImmunity(type, pokemon) {
+			if (type === 'sandstorm') return false;
+		},
+		onModifyAccuracyPriority: -1,
+		onModifyAccuracy(accuracy) {
+			if (typeof accuracy !== 'number') return;
+			if (this.field.isWeather('sandstorm')) {
+				this.debug('Sand Veil - decreasing accuracy');
+				return this.chainModify([3277, 4096]);
+			}
+		},
+		onBasePowerPriority: 21,
+		onBasePower(basePower, attacker, defender, move) {
+			if (this.field.isWeather('sandstorm')) {
+				if (move.type === 'Rock' || move.type === 'Ground' || move.type === 'Steel') {
+					this.debug('Sand Force boost');
+					return this.chainModify([5325, 4096]);
+				}
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			if (effect.effectType !== 'Move') {
+				if (effect.effectType === 'Ability') this.add('-activate', source, 'ability: ' + effect.name);
+				return false;
+			}
+		},
+		flags: {breakable: 1},
+		name: "Primordial Terror",
+		rating: 5,
+		num: -1010,
+	},
+	echoingsoul: {
+		onStart(pokemon) {
+			// Initializes the safety switch the moment the Pokémon enters battle
+			pokemon.m.echoingSoulTriggering = false;
+		},
+		onAfterEachBoost(boost, target, source, effect) {
+			if (target.m.echoingSoulTriggering) return;
+
+			let statChanged = false;
+			let i: BoostID;
+			for (i in boost) {
+				// Check if any stat went up (> 0) or down (< 0)
+				if (boost[i] !== 0 && boost[i] !== undefined) {
+					statChanged = true;
+					break; // We only need one stat to change to know we should trigger
+				}
+			}
+
+			if (statChanged) {
+				this.add('-ability', target, 'Echoing Soul');
+				
+				// 1. Lock the ability so it doesn't read its own boost
+				target.m.echoingSoulTriggering = true; 
+				
+				// 2. Apply the Omni-Boost (Atk, Def, SpA, SpD, Spe)
+				this.boost({atk: 1, def: 1, spa: 1, spd: 1, spe: 1}, target, target, null, false, true);
+				
+				// 3. Unlock the ability so it's ready for the next turn/move
+				target.m.echoingSoulTriggering = false;
+			}
+		},
+		flags: {breakable: 1},
+		name: "Echoing Soul",
+		rating: 5,
+		num: -1011,
+	},
+	nihility: {
+		onStart(pokemon) {
+			this.add('-ability', pokemon, 'Nihility');
+			this.add('-message', `All is reduced to nothingness...`);
+			
+			// SLATE WIPE: Clear Boosts and Status
+			for (const target of this.getAllActive()) {
+				target.clearBoosts();
+				target.cureStatus();
+			}
+			
+			// SLATE WIPE: Clear Entry Hazards on both sides
+			const hazards = ['stealthrock', 'spikes', 'toxicspikes', 'stickyweb', 'gmaxsteelsurge'];
+			for (const side of this.sides) {
+				for (const hazard of hazards) {
+					side.removeSideCondition(hazard);
+				}
+			}
+		},
+		onAnySwitchIn(pokemon) {
+			// SAFETY CHECK: If the Pokemon switching in is on Weavile's team, do nothing
+			if (pokemon.side === this.effectState.target.side) return;
+
+			// VOID TOLL: Damage on opponent switch-in
+			this.add('-message', `${pokemon.name} paid the Void Toll!`);
+			this.damage(pokemon.baseMaxhp / 8, pokemon, this.effectState.target);
+			
+			// BROKEN SPIRIT: Check the ability's state to see if it owes a debuff
+			if (this.effectState.brokenSpiritTrigger) {
+				this.add('-message', `The void left by their fallen ally breaks ${pokemon.name}'s spirit!`);
+				this.boost({atk: -1, spa: -1, spe: -1}, pokemon, this.effectState.target);
+				
+				// Consume the trigger so it only hits the FIRST replacement
+				this.effectState.brokenSpiritTrigger = false; 
+			}
+		},
+		onAnyTryMove(source, target, move) {
+			// STATUS LOCKOUT: Complete shutdown of all non-attacking moves for the opponent
+			if (source.side !== this.effectState.target.side && move.category === 'Status') {
+				this.add('-fail', source, 'move: ' + move.name, '[from] ability: Nihility');
+				return null;
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			// ASSASSIN'S EYE: Ice and Dark moves ignore resistances (Tinted Lens effect)
+			if (source === this.effectState.target && (move.type === 'Ice' || move.type === 'Dark')) {
+				if (target.getMoveHitData(move).typeMod < 0) {
+					this.debug('Nihility Assassin Eye boost');
+					return this.chainModify(2);
+				}
+			}
+		},
+		onModifyCritRatio(critRatio, source, target) {
+			// PERFECT EDGE: Guaranteed Critical Hits
+			if (source === this.effectState.target) return 5;
+		},
+		onSourceAfterFaint(length, target, source, effect) {
+			// BROKEN SPIRIT (Tracker): Save the trigger to the ability's own state
+			if (effect && effect.effectType === 'Move' && source === this.effectState.target) {
+				this.effectState.brokenSpiritTrigger = true;
+			}
+		},
+		onFaint(target, source, effect) {
+			// THE VOID SPREADS: Curse the killer
+			if (source && source !== target && effect && effect.effectType === 'Move') {
+				this.add('-message', `${source.name} was cursed by the void!`);
+				
+				// 1. Mark the specific Pokemon with a permanent internal flag
+				source.m.voidCursed = true;
+				// 2. Attach a permanent tracker to their side of the field to watch for them
+				source.side.addSideCondition('thevoidspreads');
+				// 3. Apply the actual status effect immediately
+				source.addVolatile('thevoidcurse');
+			}
+		},
+		flags: {},
+		name: "Nihility",
+		rating: 5,
+		num: -1012,
 	},
 };

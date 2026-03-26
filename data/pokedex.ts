@@ -7353,7 +7353,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		types: ["Fire", "Fighting"],
 		genderRatio: { M: 0.875, F: 0.125 },
 		baseStats: { hp: 76, atk: 104, def: 71, spa: 104, spd: 71, spe: 108 },
-		abilities: { 0: "Sheer Force", H: "Iron Fist" },
+		abilities: { 0: "Sheer Force", H: "Iron Fist", S: "Wukong's Stance Change"},
 		heightm: 1.2,
 		weightkg: 55,
 		color: "Brown",
