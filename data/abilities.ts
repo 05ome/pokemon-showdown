@@ -5767,7 +5767,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;	
 				if (move.ruinedSpA !== abilityHolder) return;
 				this.debug('Wukong SpA drop');
-				return this.chainModify(0.85);
+				return this.chainModify(0.75);
 			}
 		},
 		onAnyModifyAtk(spa, source, target, move) {
@@ -5777,7 +5777,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;
 				if (move.ruinedSpA !== abilityHolder) return;
 				this.debug('Wukong Atk drop');
-				return this.chainModify(0.85);
+				return this.chainModify(0.75);
 			}
 		},
 		onResidualOrder: 28,
@@ -6173,75 +6173,60 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	nihility: {
 		onStart(pokemon) {
 			this.add('-ability', pokemon, 'Nihility');
-			this.add('-message', `All is reduced to nothingness...`);
 			
-			// SLATE WIPE: Clear Boosts and Status
+			// 1. SLATE WIPE: Stats and Status (Haze & Heal Bell logic)
+			this.add('-clearallboost'); // Tells the UI to remove the stat arrows
 			for (const target of this.getAllActive()) {
-				target.clearBoosts();
-				target.cureStatus();
+				target.clearBoosts(); // Mechanically resets the stats to 0
+				target.cureStatus();  // Mechanically removes burn, poison, etc.
 			}
 			
-			// SLATE WIPE: Clear Entry Hazards on both sides
+			// 2. SLATE WIPE: Hazards (Using exact Screen Cleaner logic)
 			const hazards = ['stealthrock', 'spikes', 'toxicspikes', 'stickyweb', 'gmaxsteelsurge'];
-			for (const side of this.sides) {
-				for (const hazard of hazards) {
-					side.removeSideCondition(hazard);
+			for (const hazard of hazards) {
+				// Safely targets both your side and the opponent's side
+				for (const side of [pokemon.side, ...pokemon.side.foeSidesWithConditions()]) {
+					if (side.getSideCondition(hazard)) {
+						side.removeSideCondition(hazard);
+						this.add('-sideend', side, this.dex.conditions.get(hazard).name, '[from] ability: Nihility', '[of] ' + pokemon);
+					}
 				}
 			}
-		},
-		onAnySwitchIn(pokemon) {
-			// SAFETY CHECK: If the Pokemon switching in is on Weavile's team, do nothing
-			if (pokemon.side === this.effectState.target.side) return;
 
-			// VOID TOLL: Damage on opponent switch-in
-			this.add('-message', `${pokemon.name} paid the Void Toll!`);
-			this.damage(pokemon.baseMaxhp / 8, pokemon, this.effectState.target);
-			
-			// BROKEN SPIRIT: Check the ability's state to see if it owes a debuff
-			if (this.effectState.brokenSpiritTrigger) {
-				this.add('-message', `The void left by their fallen ally breaks ${pokemon.name}'s spirit!`);
-				this.boost({atk: -1, spa: -1, spe: -1}, pokemon, this.effectState.target);
-				
-				// Consume the trigger so it only hits the FIRST replacement
-				this.effectState.brokenSpiritTrigger = false; 
+			// 3. DEPLOY DOMAIN: Attach the invisible tracker to the opponent's side for Void Toll
+			pokemon.side.foe.addSideCondition('nihilitydomain', pokemon);
+		},
+		onEnd(pokemon) {
+			// Cleans up the domain if Weavile is swapped out via U-Turn/Baton Pass
+			pokemon.side.foe.removeSideCondition('nihilitydomain');
+		},
+		onSourceAfterFaint(length, target, source, effect) {
+			// BROKEN SPIRIT (Tracker): Set the flag on Weavile's mutable object
+			if (effect && effect.effectType === 'Move' && source === this.effectState.target) {
+				source.m.brokenSpiritTrigger = true;
 			}
 		},
 		onAnyTryMove(source, target, move) {
-			// STATUS LOCKOUT: Complete shutdown of all non-attacking moves for the opponent
 			if (source.side !== this.effectState.target.side && move.category === 'Status') {
 				this.add('-fail', source, 'move: ' + move.name, '[from] ability: Nihility');
 				return null;
 			}
 		},
 		onModifyDamage(damage, source, target, move) {
-			// ASSASSIN'S EYE: Ice and Dark moves ignore resistances (Tinted Lens effect)
 			if (source === this.effectState.target && (move.type === 'Ice' || move.type === 'Dark')) {
 				if (target.getMoveHitData(move).typeMod < 0) {
-					this.debug('Nihility Assassin Eye boost');
 					return this.chainModify(2);
 				}
 			}
 		},
 		onModifyCritRatio(critRatio, source, target) {
-			// PERFECT EDGE: Guaranteed Critical Hits
 			if (source === this.effectState.target) return 5;
 		},
-		onSourceAfterFaint(length, target, source, effect) {
-			// BROKEN SPIRIT (Tracker): Save the trigger to the ability's own state
-			if (effect && effect.effectType === 'Move' && source === this.effectState.target) {
-				this.effectState.brokenSpiritTrigger = true;
-			}
-		},
 		onFaint(target, source, effect) {
-			// THE VOID SPREADS: Curse the killer
 			if (source && source !== target && effect && effect.effectType === 'Move') {
 				this.add('-message', `${source.name} was cursed by the void!`);
-				
-				// 1. Mark the specific Pokemon with a permanent internal flag
 				source.m.voidCursed = true;
-				// 2. Attach a permanent tracker to their side of the field to watch for them
 				source.side.addSideCondition('thevoidspreads');
-				// 3. Apply the actual status effect immediately
 				source.addVolatile('thevoidcurse');
 			}
 		},

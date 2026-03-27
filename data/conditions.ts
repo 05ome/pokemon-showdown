@@ -618,8 +618,37 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				pokemon.addVolatile('thevoidcurse');
 			}
 		},
+		name: "The Void Spread",
 	},
-	
+	nihilitydomain: {
+		onSideStart(side, source) {
+			// Saves Weavile as the owner of this domain
+			this.effectState.source = source;
+		},
+		onSwitchIn(pokemon) {
+			const source = this.effectState.source;
+			
+			// SAFETY CATCH: If Weavile switches out, faints, or loses the ability, 
+			// this destroys the invisible domain so it stops triggering.
+			if (!source || !source.isActive || !source.hasAbility('nihility')) {
+				pokemon.side.removeSideCondition('nihilitydomain');
+				return;
+			}
+
+			// VOID TOLL: Damage the switch-in
+			this.add('-message', `${pokemon.name} paid the Void Toll!`);
+			this.damage(pokemon.baseMaxhp / 8, pokemon, source);
+
+			// BROKEN SPIRIT: Consume Weavile's kill tracker and drop stats
+			if (source.m.brokenSpiritTrigger) {
+				this.add('-message', `The void left by their fallen ally breaks ${pokemon.name}'s spirit!`);
+				this.boost({atk: -1, spa: -1, spe: -1}, pokemon, source);
+				
+				// Resets the flag so it only hits the first Pokémon to switch in
+				source.m.brokenSpiritTrigger = false; 
+			}
+		},
+	},
 	// The actual damage and stat penalty
 	thevoidcurse: {
 		noCopy: true, 
@@ -638,6 +667,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				return this.chainModify(0.5);
 			}
 		},
+		name: "The Void Curse",
 	},
 	sunnyday: {
 		name: 'SunnyDay',
