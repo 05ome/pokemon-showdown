@@ -22574,4 +22574,24 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		zMove: { boost: { spa: 1, atk: 1, spe: 1 } },
 		contestType: "Beautiful",
 	},
+	flamecombat: {
+		num: -999,
+		accuracy: 100,
+		basePower: 120,
+		category: "Physical",
+		name: "Flame Combat",
+		pp: 5,
+		priority: 0,
+		flags: { contact: 1, protect: 1, mirror: 1, metronome: 1 },
+		self: {
+			boosts: {
+				def: -1,
+				spd: -1,
+			},
+		},
+		secondary: null,
+		target: "normal",
+		type: "Fire",
+		contestType: "Tough",
+	},
 };

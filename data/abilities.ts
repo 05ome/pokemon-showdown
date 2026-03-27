@@ -5865,17 +5865,46 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			}
 		},
 		onTryBoost(boost, target, source, effect) {
-			if (target.m.wukongStance === 1 && source && target !== source) {
-				let showMsg = false;
-				let i: BoostID;
-				for (i in boost) {
-					if (boost[i]! < 0) {
-						delete boost[i];
-						showMsg = true;
+			// Flame Stance (0): Immune to self-drops from Flame Combat
+			if (target.m.wukongStance === 0) {
+				if (source && target === source && effect && effect.id === 'flamecombat') {
+					let showMsg = false;
+					let i: BoostID;
+					for (i in boost) {
+						if (boost[i]! < 0) {
+							delete boost[i];
+							showMsg = true;
+						}
+					}
+					if (showMsg) {
+						this.add('-ability', target, 'Wukong\'s Stance Change');
+						this.add('-message', `${target.name}'s Flame Stance maintained its defenses!`);
 					}
 				}
-				if (showMsg && !(effect as ActiveMove).secondaries) {
-					this.add('-fail', target, 'unboost', '[from] ability: Wukong\'s Stance Change', '[of] ' + target);
+			}
+
+			// Iron Stance (1): Immune to opponent drops AND Close Combat self-drops
+			if (target.m.wukongStance === 1) {
+				const isOpponent = source && target !== source;
+				const isCloseCombat = source && target === source && effect && effect.id === 'closecombat';
+
+				if (isOpponent || isCloseCombat) {
+					let showMsg = false;
+					let i: BoostID;
+					for (i in boost) {
+						if (boost[i]! < 0) {
+							delete boost[i];
+							showMsg = true;
+						}
+					}
+					if (showMsg) {
+						if (isOpponent && !(effect as ActiveMove).secondaries) {
+							this.add('-fail', target, 'unboost', '[from] ability: Wukong\'s Stance Change', '[of] ' + target);
+						} else if (isCloseCombat) {
+							this.add('-ability', target, 'Wukong\'s Stance Change');
+							this.add('-message', `${target.name}'s Iron Stance maintained its defenses!`);
+						}
+					}
 				}
 			}
 		},
@@ -6338,5 +6367,18 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Distortion",
 		rating: 4,
 		num: -66,
-	}
+	},
+	blazeboost: {
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		onResidual(pokemon) {
+			if (pokemon.activeTurns) {
+				this.boost({ spe: 1, atk: 1 });
+			}
+		},
+		flags: {},
+		name: "Blaze Boost",
+		rating: 5,
+		num: -998,
+	},
 };
