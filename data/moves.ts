@@ -22557,5 +22557,21 @@ export const Moves: import('../sim/dex-moves').MoveDataTable = {
 		},
 		target: "allAdjacentFoes",
 		type: "Dragon",
-	}
+	},
+	distortionworld: {
+		num: -666,
+		accuracy: true,
+		basePower: 0,
+		category: "Status",
+		name: "Distortion World",
+		pp: 5,
+		priority: 0,
+		flags: {},
+		weather: 'distortionworld',
+		secondary: null,
+		target: "all",
+		type: "Ghost",
+		zMove: { boost: { spa: 1, atk: 1, spe: 1 } },
+		contestType: "Beautiful",
+	},
 };

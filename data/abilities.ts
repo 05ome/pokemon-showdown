@@ -5793,7 +5793,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onResidual(pokemon) {
 			// Using this.heal() forces the engine to actually broadcast the healing animation
 			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
-				this.heal(pokemon.baseMaxhp / 8);
+				this.heal(pokemon.baseMaxhp / 16);
 			}
 		},
 		onDamage(damage, target, source, effect) {

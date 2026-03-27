@@ -3286,10 +3286,10 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			if (!speciesMods.length) throw new Error('This format has no rules that modify base stats.');
 		},
 	},
-	lockedterrainrule: {
+	volcanic: {
 		effectType: 'Rule',
-		name: 'Locked Terrain Rule',
-		desc: "The battle begins with a permanent terrain that cannot be changed.",
+		name: 'Volcanic',
+		desc: "The battle begins with a permanent Volcanic terrain that cannot be changed.",
 		duration: 0,
 		onBegin() {
 			// 1. Set the initial terrain using Player 1's first Pokemon as the source
@@ -3316,6 +3316,108 @@ export const Rulesets: import('../sim/dex-formats').FormatDataTable = {
 			// @ts-ignore
 			this.field.clearTerrain = () => {
 				this.add('-message', "The primordial terrain is too deeply rooted to be cleared!");
+				return true; 
+			};
+		},
+	},
+	umbral: {
+		effectType: 'Rule',
+		name: 'Umbral',
+		desc: "The battle begins with a permanent Umbral terrain that cannot be changed.",
+		duration: 0,
+		onBegin() {
+			// 1. Set the initial terrain using Player 1's first Pokemon as the source
+			const starter = this.sides[0].pokemon[0];
+			this.field.setTerrain('umbralterrain', starter, this.effect);
+			this.add('-message', "An umbral energy locks the terrain!");
+
+			// 2. THE NUCLEAR OPTION: Hijack the field's terrain methods
+			const originalSetTerrain = this.field.setTerrain.bind(this.field);
+			
+			// @ts-ignore: We are forcefully overwriting the instance method
+			this.field.setTerrain = (status, source, sourceEffect) => {
+				const targetTerrain = this.dex.conditions.get(status);
+				// If anything tries to set a terrain that isn't ours, block it
+				if (targetTerrain.id && targetTerrain.id !== 'umbralterrain') {
+					this.add('-message', `The umbral energy crushes the attempt to set ${targetTerrain.name}!`);
+					return true;
+				}
+				// Otherwise, let it proceed (in case the engine needs to re-verify our terrain)
+				return originalSetTerrain(status, source, sourceEffect);
+			};
+
+			// 3. Block moves like Ice Spinner and Defog from wiping it out
+			// @ts-ignore
+			this.field.clearTerrain = () => {
+				this.add('-message', "The umbral terrain is too deeply rooted to be cleared!");
+				return true; 
+			};
+		},
+	},
+	tectonic: {
+		effectType: 'Rule',
+		name: 'Tectonic',
+		desc: "The battle begins with a permanent Tectonic terrain that cannot be changed.",
+		duration: 0,
+		onBegin() {
+			// 1. Set the initial terrain using Player 1's first Pokemon as the source
+			const starter = this.sides[0].pokemon[0];
+			this.field.setTerrain('tectonicterrain', starter, this.effect);
+			this.add('-message', "An earthly energy locks the terrain!");
+
+			// 2. THE NUCLEAR OPTION: Hijack the field's terrain methods
+			const originalSetTerrain = this.field.setTerrain.bind(this.field);
+			
+			// @ts-ignore: We are forcefully overwriting the instance method
+			this.field.setTerrain = (status, source, sourceEffect) => {
+				const targetTerrain = this.dex.conditions.get(status);
+				// If anything tries to set a terrain that isn't ours, block it
+				if (targetTerrain.id && targetTerrain.id !== 'tectonicterrain') {
+					this.add('-message', `The earthly energy crushes the attempt to set ${targetTerrain.name}!`);
+					return true;
+				}
+				// Otherwise, let it proceed (in case the engine needs to re-verify our terrain)
+				return originalSetTerrain(status, source, sourceEffect);
+			};
+
+			// 3. Block moves like Ice Spinner and Defog from wiping it out
+			// @ts-ignore
+			this.field.clearTerrain = () => {
+				this.add('-message', "The earth terrain is too deeply rooted to be cleared!");
+				return true; 
+			};
+		},
+	},
+	blight: {
+		effectType: 'Rule',
+		name: 'Blight',
+		desc: "The battle begins with a permanent Blight terrain that cannot be changed.",
+		duration: 0,
+		onBegin() {
+			// 1. Set the initial terrain using Player 1's first Pokemon as the source
+			const starter = this.sides[0].pokemon[0];
+			this.field.setTerrain('blightterrain', starter, this.effect);
+			this.add('-message', "A blight energy locks the terrain!");
+
+			// 2. THE NUCLEAR OPTION: Hijack the field's terrain methods
+			const originalSetTerrain = this.field.setTerrain.bind(this.field);
+			
+			// @ts-ignore: We are forcefully overwriting the instance method
+			this.field.setTerrain = (status, source, sourceEffect) => {
+				const targetTerrain = this.dex.conditions.get(status);
+				// If anything tries to set a terrain that isn't ours, block it
+				if (targetTerrain.id && targetTerrain.id !== 'blightterrain') {
+					this.add('-message', `The blight energy crushes the attempt to set ${targetTerrain.name}!`);
+					return true;
+				}
+				// Otherwise, let it proceed (in case the engine needs to re-verify our terrain)
+				return originalSetTerrain(status, source, sourceEffect);
+			};
+
+			// 3. Block moves like Ice Spinner and Defog from wiping it out
+			// @ts-ignore
+			this.field.clearTerrain = () => {
+				this.add('-message', "The blight terrain is too deeply rooted to be cleared!");
 				return true; 
 			};
 		},

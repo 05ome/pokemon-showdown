@@ -169,6 +169,24 @@ export const Formats: import('../sim/dex-formats').FormatList = [
     	battle: {trunc: Math.trunc},
     	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
 	},
+	{
+		name: "[Gen 9] Sinnoh Play Triples",
+    	mod: 'gen9',
+		gameType: 'triples',
+		searchShow: false,
+    	debug: true,
+    	battle: {trunc: Math.trunc},
+    	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
+	},
+	{
+		name: "[Gen 9] Sinnoh Play Doubles",
+    	mod: 'gen9',
+		gameType: 'doubles',
+		searchShow: false,
+    	debug: true,
+    	battle: {trunc: Math.trunc},
+    	ruleset: ['Blind Team Preview','Max Team Size = 24', 'Max Move Count = 24', 'Max Level = 9999', 'Default Level = 100','Cancel Mod'],
+	},
 
 	// S/V Doubles
 	///////////////////////////////////////////////////////////////////
