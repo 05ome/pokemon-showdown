@@ -6312,4 +6312,31 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -666,
 	},
+	distortion: {
+		onModifyMovePriority: -5,
+		onModifyMove(move, attacker) {
+			// 1. Shadow Force hits in a single strike
+			if (move.id === 'shadowforce') {
+				delete move.flags['charge'];
+				move.onTryMove = function () {}; // Bypasses the disappear/charge turn completely
+			}
+			
+			// 2. Giratina inherently ignores Fairy's Dragon immunity, even if weather is overwritten
+			if (move.type === 'Dragon') {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Dragon'] = true;
+				}
+			}
+		},
+		onDragOut(pokemon) {
+			// Immune to Roar, Whirlwind, Dragon Tail
+			this.add('-message', `${pokemon.name} is anchored to the Distortion World and cannot be forced out!`);
+			return null;
+		},
+		flags: {cantsuppress: 1, failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1},
+		name: "Distortion",
+		rating: 4,
+		num: -66,
+	}
 };

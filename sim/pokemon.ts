@@ -2128,6 +2128,7 @@ export class Pokemon {
 		if (!negateImmunity && this.hasType('Flying') && !(this.hasType('???') && 'roost' in this.volatiles)) return false;
 		if (this.hasAbility('levitate') && !this.battle.suppressingAbility(this)) return null;
 		if (this.hasAbility('absolutedistortion') && this.species.name === 'Giratina-Origin') return null;
+		if (this.hasAbility('distortion') && this.species.name === 'Giratina-Origin') return null;
 		if ('magnetrise' in this.volatiles) return false;
 		if ('telekinesis' in this.volatiles) return false;
 		return item !== 'airballoon';
