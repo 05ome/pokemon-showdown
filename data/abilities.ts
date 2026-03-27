@@ -5761,30 +5761,40 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
 		},
 		onAnyModifySpA(spa, source, target, move) {
-			if (source.m.wukongStance === 0 || source.m.wukongStance === 1){
-				const abilityHolder = this.effectState.target;
-				if (source.hasAbility("Wukong's Stance Change")) return;
-				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;	
+			// abilityHolder is Infernape. 
+			const abilityHolder = this.effectState.target;
+			
+			// We check INFERNAPE'S stance, not the attacker's stance
+			if (abilityHolder.m.wukongStance === 0 || abilityHolder.m.wukongStance === 1) {
+				// Don't drop Infernape's own SpA when he attacks
+				if (source.hasAbility("Wukong's Stance Change")) return; 
+				
+				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder; 	
 				if (move.ruinedSpA !== abilityHolder) return;
 				this.debug('Wukong SpA drop');
 				return this.chainModify(0.75);
 			}
 		},
-		onAnyModifyAtk(spa, source, target, move) {
-			if (source.m.wukongStance === 0 || source.m.wukongStance === 1){
-				const abilityHolder = this.effectState.target;
+		onAnyModifyAtk(atk, source, target, move) { 
+			const abilityHolder = this.effectState.target;
+			
+			if (abilityHolder.m.wukongStance === 0 || abilityHolder.m.wukongStance === 1) {
 				if (source.hasAbility("Wukong's Stance Change")) return;
-				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder;
-				if (move.ruinedSpA !== abilityHolder) return;
+				
+				// Changed to ruinedAtk to prevent conflicts with the SpA drop
+				if (!move.ruinedAtk) move.ruinedAtk = abilityHolder;
+				if (move.ruinedAtk !== abilityHolder) return;
 				this.debug('Wukong Atk drop');
 				return this.chainModify(0.75);
 			}
 		},
 		onResidualOrder: 28,
-		onResidualSubOrder: 4,
-		onResidual(pokemon){
-			if(!pokemon.hp) return;
-			pokemon.heal(pokemon.maxhp/8);
+		onResidualSubOrder: 2, // SubOrder 2 is the engine standard for passive healing 
+		onResidual(pokemon) {
+			// Using this.heal() forces the engine to actually broadcast the healing animation
+			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
+				this.heal(pokemon.baseMaxhp / 8);
+			}
 		},
 		onDamage(damage, target, source, effect) {
 			if (effect && effect.effectType === 'Move' && effect.id !== 'struggle') {
@@ -6237,13 +6247,13 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	},
 	absolutedistortion: {
 		onStart(source) {
-			this.field.setWeather('distortionworld');
+			this.field.setWeather('absolutedistortionworld');
 		},
 		onAnySetWeather(target, source, weather) {
 			// Prevents normal weathers from overwriting it. 
 			// Only other primal weathers (Desolate Land, etc.) can fight it.
-			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream', 'distortionworld'];
-			if (this.field.getWeather().id === 'distortionworld' && !strongWeathers.includes(weather.id)) return false;
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream', 'absolutedistortionworld'];
+			if (this.field.getWeather().id === 'absolutedistortionworld' && !strongWeathers.includes(weather.id)) return false;
 		},
 		onEnd(pokemon) {
 			// Ends the weather immediately when Giratina leaves the field or faints
@@ -6300,6 +6310,6 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		flags: {cantsuppress: 1, failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1},
 		name: "Absolute Distortion",
 		rating: 5,
-		num: 3007,
+		num: -666,
 	},
 };
