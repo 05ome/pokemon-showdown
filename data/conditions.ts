@@ -608,6 +608,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 	},
 	// The invisible field tracker that watches for the cursed Pokemon
 	thevoidspreads: {
+		name: "The Void Spread",
 		onSideStart(side) {
 			this.add('-message', `The void has taken root on this side of the field...`);
 		},
@@ -618,7 +619,6 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				pokemon.addVolatile('thevoidcurse');
 			}
 		},
-		name: "The Void Spread",
 	},
 	nihilitydomain: {
 		onSideStart(side, source) {
@@ -651,6 +651,7 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 	},
 	// The actual damage and stat penalty
 	thevoidcurse: {
+		name: "The Void Curse",
 		noCopy: true, 
 		onStart(pokemon) {
 			this.add('-start', pokemon, 'The Void Curse');
@@ -667,7 +668,6 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 				return this.chainModify(0.5);
 			}
 		},
-		name: "The Void Curse",
 	},
 	sunnyday: {
 		name: 'SunnyDay',
