@@ -875,7 +875,129 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			this.add('-weather', 'none');
 		},
 	},
-
+	distortionworld: {
+		name: 'Distortion World',
+		effectType: 'Weather',
+		duration: 5,
+		onFieldStart(field, source, effect) {
+			if (effect?.effectType === 'Ability') {
+				if (this.gen <= 5) this.effectState.duration = 0;
+				this.add('-weather', 'Distortion World', '[from] ability: Absolute Distortion', `[of] ${source}`);
+			} else {
+				this.add('-weather', 'Distortion World');
+			}
+		},
+		onFieldResidualOrder: 1,
+		onFieldResidual() {
+			this.add('-weather', 'Distortion World', '[upkeep]');
+			this.eachEvent('Weather');
+		},
+		onBasePowerPriority: 20,
+		onBasePower(basePower, attacker, defender, move) {
+			// Boosts Ghost and Dragon by 1.5x
+			if (move.type === 'Ghost' || move.type === 'Dragon') {
+				this.debug('Distortion World boost');
+				return this.chainModify(1.5);
+			}
+		},
+		onTryHitPriority: 1,
+		onTryHit(target, source, move) {
+			// Nullifies Priority Moves
+			if (move.priority > 0) {
+				this.add('-message', `Priority is suppressed within the Distortion World!`);
+				return null;
+			}
+			// Nullifies Fairy and Psychic Moves
+			if (move.type === 'Fairy' || move.type === 'Psychic') {
+				this.add('-message', `The Distortion World absorbed the ${move.type}-type attack!`);
+				return null;
+			}
+		},
+		onModifyMove(move) {
+			// Removes Fairy's immunity to Dragon globally while weather is up
+			if (move.type === 'Dragon') {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Dragon'] = true;
+				}
+			}
+		},
+		onAnySwitchIn(pokemon) {
+			// Damages any Pokemon switching in that isn't Giratina
+			if (pokemon.species.baseSpecies !== 'Giratina') {
+				this.add('-message', `${pokemon.name} was crushed by the distorted gravity!`);
+				this.damage(pokemon.baseMaxhp / 8, pokemon);
+			}
+		},
+		onTrapPokemon(pokemon) {
+			// Traps all non-Giratina Pokemon
+			if (pokemon.species.baseSpecies !== 'Giratina') {
+				pokemon.tryTrap();
+			}
+		},
+		onFieldEnd() {
+			this.add('-weather', 'none');
+		},
+	},
+	absolutedistortionworld: {
+		name: 'Absolute Distortion World',
+		effectType: 'Weather',
+		duration: 0,
+		onFieldStart(field, source, effect) {
+			this.add('-weather', 'Absolute Distortion World', '[from] ability: Absolute Distortion', '[of] ' + source);
+		},
+		onFieldResidualOrder: 1,
+		onFieldResidual() {
+			this.add('-weather', 'Absolute Distortion World', '[upkeep]');
+			this.eachEvent('Weather');
+		},
+		onBasePowerPriority: 20,
+		onBasePower(basePower, attacker, defender, move) {
+			// Boosts Ghost and Dragon by 1.5x
+			if (move.type === 'Ghost' || move.type === 'Dragon') {
+				this.debug('Absolute Distortion World boost');
+				return this.chainModify(1.5);
+			}
+		},
+		onTryHitPriority: 1,
+		onTryHit(target, source, move) {
+			// Nullifies Priority Moves
+			if (move.priority > 0) {
+				this.add('-message', `Priority is suppressed within the Distortion World!`);
+				return null;
+			}
+			// Nullifies Fairy and Psychic Moves
+			if (move.type === 'Fairy' || move.type === 'Psychic') {
+				this.add('-message', `The Distortion World absorbed the ${move.type}-type attack!`);
+				return null;
+			}
+		},
+		onModifyMove(move) {
+			// Removes Fairy's immunity to Dragon globally while weather is up
+			if (move.type === 'Dragon') {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Dragon'] = true;
+				}
+			}
+		},
+		onAnySwitchIn(pokemon) {
+			// Damages any Pokemon switching in that isn't Giratina
+			if (pokemon.species.baseSpecies !== 'Giratina') {
+				this.add('-message', `${pokemon.name} was crushed by the distorted gravity!`);
+				this.damage(pokemon.baseMaxhp / 8, pokemon);
+			}
+		},
+		onTrapPokemon(pokemon) {
+			// Traps all non-Giratina Pokemon
+			if (pokemon.species.baseSpecies !== 'Giratina') {
+				pokemon.tryTrap();
+			}
+		},
+		onFieldEnd() {
+			this.add('-weather', 'none');
+		},
+	},
 	dynamax: {
 		name: 'Dynamax',
 		noCopy: true,

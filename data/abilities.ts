@@ -924,7 +924,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.field.setWeather('deltastream');
 		},
 		onAnySetWeather(target, source, weather) {
-			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream'];
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream','absolutedistortionworld'];
 			if (this.field.getWeather().id === 'deltastream' && !strongWeathers.includes(weather.id)) return false;
 		},
 		onEnd(pokemon) {
@@ -948,7 +948,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.field.setWeather('desolateland');
 		},
 		onAnySetWeather(target, source, weather) {
-			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream'];
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream','absolutedistortionworld'];
 			if (this.field.getWeather().id === 'desolateland' && !strongWeathers.includes(weather.id)) return false;
 		},
 		onEnd(pokemon) {
@@ -2865,7 +2865,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onSwitchIn(pokemon) {
 			this.add('-ability', pokemon, 'Neutralizing Gas');
 			pokemon.abilityState.ending = false;
-			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream'];
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream','absolutedistortionworld'];
 			for (const target of this.getAllActive()) {
 				if (target.hasItem('Ability Shield')) {
 					this.add('-block', target, 'item: Ability Shield');
@@ -3395,7 +3395,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.field.setWeather('primordialsea');
 		},
 		onAnySetWeather(target, source, weather) {
-			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream'];
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream','absolutedistortionworld'];
 			if (this.field.getWeather().id === 'primordialsea' && !strongWeathers.includes(weather.id)) return false;
 		},
 		onEnd(pokemon) {
@@ -5904,7 +5904,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			if (move.type === 'Electric') {
 				if (!move.ignoreImmunity) move.ignoreImmunity = {};
 				if (move.ignoreImmunity !== true) {
-					move.ignoreImmunity['Ground'] = true; 
+					move.ignoreImmunity['Electric'] = true; 
 				}
 			}
 		},
@@ -6021,7 +6021,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			move.ignoreEvasion = true;
 			if (!move.ignoreImmunity) move.ignoreImmunity = {};
 			if (move.ignoreImmunity !== true) {
-				move.ignoreImmunity['Dark'] = true;
+				move.ignoreImmunity['Psychic'] = true;
 			}
 		},
 		flags: {},
@@ -6234,5 +6234,72 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Nihility",
 		rating: 5,
 		num: -1012,
+	},
+	absolutedistortion: {
+		onStart(source) {
+			this.field.setWeather('distortionworld');
+		},
+		onAnySetWeather(target, source, weather) {
+			// Prevents normal weathers from overwriting it. 
+			// Only other primal weathers (Desolate Land, etc.) can fight it.
+			const strongWeathers = ['desolateland', 'primordialsea', 'deltastream', 'distortionworld'];
+			if (this.field.getWeather().id === 'distortionworld' && !strongWeathers.includes(weather.id)) return false;
+		},
+		onEnd(pokemon) {
+			// Ends the weather immediately when Giratina leaves the field or faints
+			if (this.field.weatherState.source !== pokemon) return;
+			for (const target of this.getAllActive()) {
+				if (target === pokemon) continue;
+				if (target.hasAbility('absolutedistortion')) {
+					this.field.weatherState.source = target;
+					return;
+				}
+			}
+			this.field.clearWeather();
+		},
+		onModifyMovePriority: -5,
+		onModifyMove(move, attacker) {
+			// 1. Shadow Force hits in a single strike
+			if (move.id === 'shadowforce') {
+				delete move.flags['charge'];
+				move.onTryMove = function () {}; // Bypasses the disappear/charge turn completely
+			}
+			
+			// 2. Giratina inherently ignores Fairy's Dragon immunity, even if weather is overwritten
+			if (move.type === 'Dragon') {
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Dragon'] = true;
+				}
+			}
+		},
+		onDragOut(pokemon) {
+			// Immune to Roar, Whirlwind, Dragon Tail
+			this.add('-message', `${pokemon.name} is anchored to the Distortion World and cannot be forced out!`);
+			return null;
+		},
+		onDamagePriority: -100, 
+		onDamage(damage, target, source, effect) {
+			// Revive mechanics: Triggers only if the damage would kill Giratina, and it hasn't revived yet.
+			if (damage >= target.hp && target.species.baseSpecies === 'Giratina' && !target.m.absoluteDistortionRevive) {
+				this.add('-message', `Giratina's shell shattered, revealing its true Origin Forme!`);
+				
+				// Mark as revived so it doesn't happen infinitely
+				target.m.absoluteDistortionRevive = true; 
+				
+				// Change form
+				target.formeChange('Giratina-Origin', this.effect, true);
+				
+				// Heal to full HP
+				this.heal(target.maxhp, target, target); 
+				
+				return 0; 
+			}
+		},
+		// cantsuppress: 1 makes it immune to Neutralizing Gas and Gastro Acid
+		flags: {cantsuppress: 1, failroleplay: 1, noreceiver: 1, noentrain: 1, notrace: 1},
+		name: "Absolute Distortion",
+		rating: 5,
+		num: 3007,
 	},
 };
