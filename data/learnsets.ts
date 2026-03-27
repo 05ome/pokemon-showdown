@@ -47301,6 +47301,7 @@ export const Learnsets: import('../sim/dex-species').LearnsetDataTable = {
 	},
 	infernape: {
 		learnset: {
+			flamecombat: ["9M"],
 			acrobatics: ["9M", "9L52", "7M", "7L52", "6M", "6L52", "5M", "5L52"],
 			aerialace: ["9M", "7M", "6M", "5M", "4M"],
 			agility: ["9M"],
