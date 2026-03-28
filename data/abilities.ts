@@ -6405,10 +6405,14 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				return;
 			}
 
-			const dazzlingHolder = this.effectState.target;
-			if ((source.isAlly(dazzlingHolder) || move.target === 'all') && move.priority > 0.1) {
+			const venomGuardHolder = this.effectState.target;
+			
+			// 'source' is the Defender. We check if the Defender is protected by Venom Guard.
+			if ((source.isAlly(venomGuardHolder) || move.target === 'all') && move.priority > 0.1) {
 				this.attrLastMove('[still]');
-				this.add('cant', dazzlingHolder, 'ability: Venom Guard', move, `[of] ${target}`);
+				
+				// 'target' is the Attacker failing to move. 'venomGuardHolder' is the reason why.
+				this.add('cant', target, 'ability: Venom Guard', move, '[of] ' + venomGuardHolder);
 				return false;
 			}
 		},
