@@ -6381,4 +6381,124 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -998,
 	},
+	windsurge: {
+		onStart(pokemon) {
+			// Sets up Tailwind for the user's side
+			if (!pokemon.side.getSideCondition('tailwind')) {
+				pokemon.side.addSideCondition('tailwind');
+			}
+		},
+		onSourceAfterFaint(length, target, source, effect) {
+			// Moxie effect: Boosts Attack after a KO
+			if (effect && effect.effectType === 'Move' && source === this.effectState.target) {
+				this.boost({atk: length}, source);
+			}
+		},
+		name: "Wind Surge",
+		rating: 4.5,
+		num: -3010,
+	},
+	venomguard: {
+		onFoeTryMove(target, source, move) {
+			// Blocks incoming priority moves
+			if (move.priority > 0 && target === this.effectState.target) {
+				this.add('cant', this.effectState.target, 'ability: Venom Guard', move, '[of] ' + target);
+				return false;
+			}
+		},
+		onDamaged(damage, target, source, move) {
+			// Poison Point effect: Poisons the attacker if they make contact
+			if (move && move.flags['contact']) {
+				// I set this to a 100% chance. If you want 30% like standard Poison Point, 
+				// change it to: if (this.randomChance(3, 10))
+				source.trySetStatus('psn', target);
+			}
+		},
+		name: "Venom Guard",
+		rating: 4,
+		num: -3011,
+	},
+	infernalcurse: {
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			if (move.type === 'Fire' || move.type === 'Dark') {
+				// Ignore abilities (Mold Breaker)
+				move.ignoreAbility = true;
+			}
+			if (move.type === 'Fire') {
+				// Safely injects a 90% burn chance without overwriting the move's other effects
+				if (!move.secondaries) move.secondaries = [];
+				move.secondaries = move.secondaries.filter(s => s.status !== 'brn');
+				move.secondaries.push({
+					chance: 90,
+					status: 'brn',
+				});
+			}
+		},
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			// 1.1x Damage boost
+			if (move.type === 'Fire' || move.type === 'Dark') {
+				return this.chainModify(1.1);
+			}
+		},
+		onModifyDamage(damage, source, target, move) {
+			// Ignore Resistances (Tinted Lens effect)
+			if (move.type === 'Fire' || move.type === 'Dark') {
+				if (target.getMoveHitData(move).typeMod < 0) {
+					return this.chainModify(2);
+				}
+			}
+		},
+		onFoeTrapPokemon(pokemon) {
+			// Traps the opponent if they are burned
+			if (pokemon.status === 'brn' && pokemon.isAdjacent(this.effectState.target)) {
+				pokemon.tryTrap(true);
+			}
+		},
+		onFoeMaybeTrapPokemon(pokemon, source) {
+			if (!source) source = this.effectState.target;
+			if (!source || !pokemon.isAdjacent(source)) return;
+			if (pokemon.status === 'brn') {
+				pokemon.maybeTrapped = true;
+			}
+		},
+		name: "Infernal Curse",
+		rating: 5,
+		num: -3012,
+	},
+	tidaldragon: {
+		onStart(pokemon) {
+			// Intimidate effect
+			let activated = false;
+			for (const target of pokemon.side.foe.active) {
+				if (!target || !target.isAdjacent(pokemon)) continue;
+				if (!activated) {
+					this.add('-ability', pokemon, 'Tidal Dragon', 'boost');
+					activated = true;
+				}
+				if (target.volatiles['substitute']) {
+					this.add('-immune', target);
+				} else {
+					this.boost({atk: -1}, target, pokemon, null, true);
+				}
+			}
+		},
+		onModifyMove(move, attacker) {
+			// Upgrades Dragon Dance to +2 Atk and +2 Spe
+			if (move.id === 'dragondance') {
+				move.boosts = {atk: 2, spe: 2};
+			}
+		},
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			// Boosts Water moves by 1.1x
+			if (move.type === 'Water') {
+				return this.chainModify(1.1);
+			}
+		},
+		name: "Tidal Dragon",
+		rating: 4.5,
+		num: -3013,
+	},
 };
