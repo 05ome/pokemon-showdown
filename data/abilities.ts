@@ -6405,14 +6405,10 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				return;
 			}
 
-			const venomGuardHolder = this.effectState.target;
-			
-			// FIXED: We check if the TARGET is the ally of the ability holder, not the attacker
-			if ((target.isAlly(venomGuardHolder) || move.target === 'all') && move.priority > 0.1) {
+			const dazzlingHolder = this.effectState.target;
+			if ((source.isAlly(dazzlingHolder) || move.target === 'all') && move.priority > 0.1) {
 				this.attrLastMove('[still]');
-				
-				// FIXED: 'source' (Chansey) goes first. '[of] venomGuardHolder' (Crobat) goes last.
-				this.add('cant', source, 'ability: Venom Guard', move, '[of] ' + venomGuardHolder);
+				this.add('cant', dazzlingHolder, 'ability: Venom Guard', move, `[of] ${target}`);
 				return false;
 			}
 		},
