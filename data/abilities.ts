@@ -6400,18 +6400,28 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	},
 	venomguard: {
 		onFoeTryMove(target, source, move) {
-			// Blocks incoming priority moves
-			if (move.priority > 0 && target === this.effectState.target) {
-				this.add('cant', this.effectState.target, 'ability: Venom Guard', move, '[of] ' + target);
+			const targetAllExceptions = ['perishsong', 'flowershield', 'rototiller'];
+			if (move.target === 'foeSide' || (move.target === 'all' && !targetAllExceptions.includes(move.id))) {
+				return;
+			}
+
+			const venomGuardHolder = this.effectState.target;
+			if ((source.isAlly(venomGuardHolder) || move.target === 'all') && move.priority > 0.1) {
+				this.attrLastMove('[still]');
+				this.add('cant', venomGuardHolder, 'ability: Venom Guard', move, `[of] ${target}`);
 				return false;
 			}
 		},
-		onDamaged(damage, target, source, move) {
-			// Poison Point effect: Poisons the attacker if they make contact
-			if (move && move.flags['contact']) {
-				// I set this to a 100% chance. If you want 30% like standard Poison Point, 
-				// change it to: if (this.randomChance(3, 10))
-				source.trySetStatus('psn', target);
+		onDamage(damage, target, source, effect) {
+			// 1. Check if the damage actually came from an attack/move
+			if (effect && effect.effectType === 'Move') {
+				// 2. Tell TypeScript to treat 'effect' as an ActiveMove so we can read its flags
+				const move = effect as ActiveMove; 
+				
+				// 3. Trigger the Poison Point effect if the move makes contact
+				if (move.flags && move.flags['contact']) {
+					source.trySetStatus('psn', target);
+				}
 			}
 		},
 		name: "Venom Guard",
