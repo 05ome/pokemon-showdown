@@ -5768,7 +5768,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder; 	
 				if (move.ruinedSpA !== abilityHolder) return;
 				this.debug('Wukong SpA drop');
-				return this.chainModify(0.75);
+				return this.chainModify(0.5);
 			}
 		},
 		onAnyModifyAtk(atk, source, target, move) { 
@@ -5781,14 +5781,14 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				if (!move.ruinedAtk) move.ruinedAtk = abilityHolder;
 				if (move.ruinedAtk !== abilityHolder) return;
 				this.debug('Wukong Atk drop');
-				return this.chainModify(0.75);
+				return this.chainModify(0.5);
 			}
 		},
 		onResidualOrder: 28,
 		onResidualSubOrder: 2, // SubOrder 2 is the engine standard for passive healing 
 		onResidual(pokemon) {
 			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
-				this.heal(pokemon.baseMaxhp / 16);
+				this.heal(pokemon.baseMaxhp / 12);
 			}
 		},
 		onDamage(damage, target, source, effect) {
@@ -6506,12 +6506,12 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onResidual(pokemon) {
 			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
-				this.heal(pokemon.baseMaxhp / 8);
+				this.heal(pokemon.baseMaxhp * 3/ 16);
 			}
 		},
 		flags: { breakable: 1 },
 		name: "Heartscale",
 		rating: 5,
 		num: -136,
-	},
+	},	
 };
