@@ -5757,7 +5757,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
 		},
 		onSourceModifyDamage(damage, source, target, move) {
-			if (source.m.wukongStance === 1 || source.m.wukongStance === 2) {
+			if (target.m.wukongStance === 1 || target.m.wukongStance === 2) {
 				this.debug('Multiscale weaken');
 				return this.chainModify(0.5);
 			}
