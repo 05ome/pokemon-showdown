@@ -5756,31 +5756,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-ability', pokemon, 'Wukong\'s Stance Change');
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
 		},
-		onAnyModifySpA(spa, source, target, move) {
-			// abilityHolder is Infernape. 
-			const abilityHolder = this.effectState.target;
-			
-			// We check INFERNAPE'S stance, not the attacker's stance
-			if (abilityHolder.m.wukongStance === 0 || abilityHolder.m.wukongStance === 1) {
-				// Don't drop Infernape's own SpA when he attacks
-				if (source.hasAbility("Wukong's Stance Change")) return; 
-				
-				if (!move.ruinedSpA) move.ruinedSpA = abilityHolder; 	
-				if (move.ruinedSpA !== abilityHolder) return;
-				this.debug('Wukong SpA drop');
-				return this.chainModify(0.5);
-			}
-		},
-		onAnyModifyAtk(atk, source, target, move) { 
-			const abilityHolder = this.effectState.target;
-			
-			if (abilityHolder.m.wukongStance === 0 || abilityHolder.m.wukongStance === 1) {
-				if (source.hasAbility("Wukong's Stance Change")) return;
-				
-				// Changed to ruinedAtk to prevent conflicts with the SpA drop
-				if (!move.ruinedAtk) move.ruinedAtk = abilityHolder;
-				if (move.ruinedAtk !== abilityHolder) return;
-				this.debug('Wukong Atk drop');
+		onSourceModifyDamage(damage, source, target, move) {
+			if (source.m.wukongStance === 1 || source.m.wukongStance === 2) {
+				this.debug('Multiscale weaken');
 				return this.chainModify(0.5);
 			}
 		},
