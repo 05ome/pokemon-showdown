@@ -5757,9 +5757,13 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-message', `${pokemon.name} is in the ${stances[pokemon.m.wukongStance]}!`);
 		},
 		onSourceModifyDamage(damage, source, target, move) {
+			// Checks if Infernape is in Iron (1) or Void (2) stance
 			if (target.m.wukongStance === 1 || target.m.wukongStance === 2) {
-				this.debug('Multiscale weaken');
-				return this.chainModify(0.5);
+				// This prints to the actual battle chat so you know it triggered
+				this.add('-message', `${target.name}'s Stance softened the blow!`);
+				
+				// Stacks perfectly with other multipliers
+				return this.chainModify(0.5); 
 			}
 		},
 		onResidualOrder: 28,
