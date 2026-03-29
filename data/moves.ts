@@ -1,5 +1,7 @@
 // List of flags and their descriptions can be found in sim/dex-moves.ts
 
+import { Species } from '../sim/dex-species';
+
 export const Moves: import('../sim/dex-moves').MoveDataTable = {
 	"10000000voltthunderbolt": {
 		num: 719,

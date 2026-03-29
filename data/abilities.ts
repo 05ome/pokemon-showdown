@@ -5791,7 +5791,6 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onResidualOrder: 28,
 		onResidualSubOrder: 2, // SubOrder 2 is the engine standard for passive healing 
 		onResidual(pokemon) {
-			// Using this.heal() forces the engine to actually broadcast the healing animation
 			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
 				this.heal(pokemon.baseMaxhp / 16);
 			}
@@ -5979,17 +5978,20 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onTryHit(target, source, move) {
 			// Grants the Ground immunity and the +2 Speed boost
 			if (target !== source && move.type === 'Ground') {
-				if (!this.heal(target.baseMaxhp / 4)) {
-					this.add('-immune', target, '[from] ability: Fault Line');
+				if (!this.heal(target.baseMaxhp / 2)) {
+					this.add('-immune', target, '[from] ability: Absorbant Armor');
 				}
 				return null;
 			}
+		},
+		onModifyCritRatio(critRatio) {
+			return critRatio + 1;
 		},
 		flags: {breakable: 1},
 		name: "Absorbant Armor",
 		rating: 4.5,
 		num: -1004,
-		shortDesc: "Immune to Ground, Heals 1/4.",
+		shortDesc: "Immune to Ground, Heals 1/2. Crit Ratio +1",
 	},
 	tectonicplate: {
 		onSourceModifyAtkPriority: 6,
@@ -6004,6 +6006,13 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			if (move.type === 'Water' || move.type === 'Grass') {
 				this.debug('Tectonic Plate weaken');
 				return this.chainModify(0.25);
+			}
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (this.checkMoveMakesContact(move, source, target)) {
+				if (this.randomChance(3, 10)) {
+					source.trySetStatus('brn', target);
+				}
 			}
 		},
 		onModifyMove(move, attacker, defender) {
@@ -6049,7 +6058,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		num: -1005,
 		shortDesc: "Cannon or Bullet moves hit 1.5x. Resists Special Atks",
 	},
-	neuraloverdrive: {
+	neuraloverride: {
 		onDamage(damage, target, source, effect) {
 			if (effect.effectType !== 'Move') {
 				if (effect.effectType === 'Ability') this.add('-activate', source, 'ability: ' + effect.name);
@@ -6064,7 +6073,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			}
 		},
 		flags: {},
-		name: "Neural Overdrive",
+		name: "Neural Override",
 		rating: 4.5,
 		num: -1007,
 		shortDesc: "Magic Guard. Psychic Hits Dark.",
@@ -6089,7 +6098,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onTryBoost(boost, target, source, effect) {
 			if (effect.name === 'Intimidate' && boost.atk) {
 				delete boost.atk;
-				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Scrappy', `[of] ${target}`);
+				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Void Blade', `[of] ${target}`);
 			}
 		},
 		flags: {},
@@ -6109,12 +6118,27 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onTryBoost(boost, target, source, effect) {
 			if (effect.name === 'Intimidate' && boost.atk) {
 				delete boost.atk;
-				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Scrappy', `[of] ${target}`);
+				this.add('-fail', target, 'unboost', 'Attack', '[from] ability: Aura Protector', `[of] ${target}`);
+			}
+			if (source && target === source && effect && effect.id === 'closecombat') {
+				let showMsg = false;
+				let i: BoostID;
+				for (i in boost) {
+					// Finds the negative drops and deletes them
+					if (boost[i]! < 0) {
+						delete boost[i];
+						showMsg = true;
+					}
+				}
+				if (showMsg) {
+					this.add('-ability', target, 'Aura Protector');
+					this.add('-message', `${target.name}'s Aura flared protecting it's defenses!`);
+				}
 			}
 		},
 		onModifyDamage(damage, source, target, move) {
 			if (target.getMoveHitData(move).crit) {
-				this.debug('Sniper boost');
+				this.debug('Aura Protector boost');
 				return this.chainModify(1.5);
 			}
 		},
@@ -6380,5 +6404,118 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Blaze Boost",
 		rating: 5,
 		num: -998,
+	},
+	porygoncharge: {
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			// This removes the "Recharge" penalty from moves like Hyper Beam and Giga Impact
+			if (move.self && move.self.volatileStatus === 'mustrecharge') {
+				delete move.self;
+			}
+			if (move.flags['recharge']) {
+				delete move.flags['recharge'];
+			}
+		},
+		onPrepareHit(source, target, move) {
+			if (move.category === 'Status' || move.multihit || move.flags['noparentalbond'] || move.flags['charge'] ||
+				move.flags['futuremove'] || move.spreadHit || move.isZ || move.isMax) return;
+			move.multihit = 3;
+			move.multihitType = 'parentalbond';
+		},
+		// Damage modifier implemented in BattleActions#modifyDamage()
+		onSourceModifySecondaries(secondaries, target, source, move) {
+			if (move.multihitType === 'parentalbond' && move.id === 'secretpower' && move.hit < 2) {
+				// hack to prevent accidentally suppressing King's Rock/Razor Fang
+				return secondaries.filter(effect => effect.volatileStatus === 'flinch');
+			}
+		},
+		flags: {},
+		name: "Porygon Charge",
+		rating: 5,
+		num: -997,
+	},
+	wonderguardz: {
+		onModifyPriority(priority, pokemon, target, move) {
+			// Boosts Destiny Bond's priority by 1 (Exactly like Prankster)
+			if (move?.id === 'destinybond') {
+				this.debug('Wonder Guard Z Destiny Bond priority boost');
+				return priority + 1;
+			}
+		},
+		onSourceModifyAccuracyPriority: -1,
+		onSourceModifyAccuracy(accuracy, target, source, move) {
+			// Hard-sets Hypnosis accuracy to 80, ignoring its default 60
+			if (move.id === 'hypnosis') {
+				this.debug('Wonder Guard Z Hypnosis accuracy boost');
+				return 80;
+			}
+		},
+		onTryHit(target, source, move) {
+			if (target === source || move.category === 'Status' || move.id === 'struggle') return;
+			if (move.id === 'skydrop' && !source.volatiles['skydrop']) return;
+			this.debug('Wonder Guard immunity: ' + move.id);
+			if (target.runEffectiveness(move) <= 0 || !target.runImmunity(move)) {
+				if (move.smartTarget) {
+					move.smartTarget = false;
+				} else {
+					this.add('-immune', target, '[from] ability: Wonder Guard Z');
+				}
+				return null;
+			}
+		},
+
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1, breakable: 1 },
+		name: "Wonder Guard Z",
+		rating: 5,
+		num: -25,
+	},
+	serenegraceomega: {
+		onModifyMovePriority: -2,
+		onModifyMove(move) {
+			if (move.secondaries) {
+				this.debug('Setting secondary chance to 80%');
+				for (const secondary of move.secondaries) {
+					// Only boosts the chance if it's currently lower than 80%
+					if (secondary.chance && secondary.chance < 80) secondary.chance = 80;
+				}
+			}
+			if (move.self?.chance && move.self.chance < 80) move.self.chance = 80;
+		},
+		flags: {},
+		name: "Serene Grace Omega",
+		rating: 5,
+		num: -32,
+	},
+	heartscale: {
+		onModifyMove(move) {
+			// Targets Scald specifically
+			if (move.id === 'scald') {
+				if (!move.secondaries) move.secondaries = [];
+				
+				// Safely removes the default 30% burn chance
+				move.secondaries = move.secondaries.filter(s => s.status !== 'brn');
+				
+				// Injects the guaranteed 100% burn chance
+				move.secondaries.push({
+					chance: 100,
+					status: 'brn',
+				});
+			}
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			if (target.hp >= target.maxhp) {
+				this.debug('Multiscale weaken');
+				return this.chainModify(0.25);
+			}
+		},
+		onResidual(pokemon) {
+			if (pokemon.hp && pokemon.hp < pokemon.maxhp) {
+				this.heal(pokemon.baseMaxhp / 8);
+			}
+		},
+		flags: { breakable: 1 },
+		name: "Heartscale",
+		rating: 5,
+		num: -136,
 	},
 };
