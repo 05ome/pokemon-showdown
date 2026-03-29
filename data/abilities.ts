@@ -5758,7 +5758,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onSourceModifyDamage(damage, source, target, move) {
 			// Checks if Infernape is in Iron (1) or Void (2) stance
-			if (target.m.wukongStance === 1 || target.m.wukongStance === 2) {
+			if (target.m.wukongStance === 0 || target.m.wukongStance === 1) {
 				// This prints to the actual battle chat so you know it triggered
 				this.add('-message', `${target.name}'s Stance softened the blow!`);
 				
