@@ -6397,7 +6397,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		onPrepareHit(source, target, move) {
 			if (move.category === 'Status' || move.multihit || move.flags['noparentalbond'] || move.flags['charge'] ||
 				move.flags['futuremove'] || move.spreadHit || move.isZ || move.isMax) return;
-			move.multihit = 3;
+			move.multihit = 4;
 			move.multihitType = 'parentalbond';
 		},
 		// Damage modifier implemented in BattleActions#modifyDamage()
@@ -6442,7 +6442,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			}
 		},
 
-		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1, breakable: 1 },
+		flags: { failroleplay: 1, noreceiver: 1, noentrain: 1, failskillswap: 1, breakable: 1, notrace: 1 },
 		name: "Wonder Guard Z",
 		rating: 5,
 		num: -25,
@@ -6491,7 +6491,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				this.heal(pokemon.baseMaxhp * 3/ 16);
 			}
 		},
-		flags: { breakable: 1 },
+		flags: { breakable: 1, notrace: 1},
 		name: "Heartscale",
 		rating: 5,
 		num: -136,

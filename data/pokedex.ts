@@ -8191,7 +8191,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		forme: "Cynthia",
 		types: ["Dragon", "Ground"],
 		gender: "F",
-		baseStats: { hp: 150, atk: 200, def: 115, spa: 130, spd: 120, spe: 132 },
+		baseStats: { hp: 160, atk: 200, def: 135, spa: 130, spd: 140, spe: 142 },
 		abilities: { 0: "Primordial Terror" },
 		heightm: 1.9,
 		weightkg: 95,
