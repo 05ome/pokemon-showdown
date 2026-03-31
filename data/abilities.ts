@@ -5775,17 +5775,27 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onDamage(damage, target, source, effect) {
 			if (effect && effect.effectType === 'Move' && effect.id !== 'struggle') {
-				target.m.wukongStance = (target.m.wukongStance + 1) % 4;
-				const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
-				this.add('-message', `${target.name} shifted to the ${stances[target.m.wukongStance]}!`);
+				// Checks if this attack pushes him below 50% AND if the override hasn't been used yet
+				if (target.hp - damage <= target.maxhp / 2 && !target.m.wukongHeavenOnce) {
+					target.m.wukongStance = 3;
+					target.m.wukongHeavenOnce = true; // Locks it so it only happens once
+					
+					this.add('-ability', target, 'Wukong\'s Stance Change');
+					this.add('-message', `${target.name}'s critical state forced an awakening into the Heaven Stance!`);
+				} else {
+					// The normal cycle (runs if above 50%, OR if below 50% but the override was already used)
+					target.m.wukongStance = (target.m.wukongStance + 1) % 4;
+					const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
+					this.add('-message', `${target.name} shifted to the ${stances[target.m.wukongStance]}!`);
+				}
 			}
 		},
 		onBasePowerPriority: 19,
 		onBasePower(basePower, attacker, defender, move) {
-			if (attacker.m.wukongStance === 0 && move.type === 'Fire') {
+			if ((attacker.m.wukongStance === 0 || attacker.m.wukongStance == 3) && move.type === 'Fire') {
 				return this.chainModify(1.5);
 			}
-			if (attacker.m.wukongStance === 1 && move.type === 'Fighting') {
+			if ((attacker.m.wukongStance === 1 || attacker.m.wukongStance == 3) && move.type === 'Fighting') {
 				return this.chainModify(1.5);
 			}
 		},
@@ -5796,7 +5806,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 					move.ignoreAbility = true;
 				}
 			}
-			if (attacker.m.wukongStance === 2) {
+			if (attacker.m.wukongStance === 2 || attacker.m.wukongStance == 3) {
 				if (move.category !== 'Status') {
 					const atk = attacker.getStat('atk', false, true);
 					const spa = attacker.getStat('spa', false, true);
