@@ -7169,7 +7169,7 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		name: "Rayquaza",
 		types: ["Dragon", "Flying"],
 		gender: "N",
-		baseStats: { hp: 355, atk: 355, def: 300, spa: 355, spd: 300, spe: 355 },
+		baseStats: { hp: 1000, atk: 1000, def: 1000, spa: 1000, spd: 1000, spe: 1000 },
 		abilities: { 0: "Air Lock" },
 		heightm: 7,
 		weightkg: 206.5,
