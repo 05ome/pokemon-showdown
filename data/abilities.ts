@@ -5788,6 +5788,10 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 					const stances = ['Flame Stance', 'Iron Stance', 'Void Stance', 'Heaven Stance'];
 					this.add('-message', `${target.name} shifted to the ${stances[target.m.wukongStance]}!`);
 				}
+				if (target.status) {
+					target.cureStatus();
+					this.add('-message', `${target.name} cleansed its mortal afflictions!`);
+				}
 			}
 		},
 		onBasePowerPriority: 19,
@@ -5900,8 +5904,8 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				return priority + 1;
 			}
 		},
-		onFlinch(pokemon) {
-			if (pokemon.m.wukongStance === 3) return false;
+		onTryAddVolatile(status, pokemon) {
+			if (status.id === 'flinch' && pokemon.m.wukongStance == 3) return null;
 		},
 		onTrapPokemonPriority: -10,
 		onTrapPokemon(pokemon) {
@@ -6329,6 +6333,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 			this.add('-message', `${pokemon.name} is anchored to the Distortion World and cannot be forced out!`);
 			return null;
 		},
+		onTryAddVolatile(status, pokemon) {
+			if (status.id === 'flinch') return null;
+		},
 		onDamagePriority: -100, 
 		onDamage(damage, target, source, effect) {
 			// Revive mechanics: Triggers only if the damage would kill Giratina, and it hasn't revived yet.
@@ -6369,6 +6376,9 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 					move.ignoreImmunity['Dragon'] = true;
 				}
 			}
+		},
+		onTryAddVolatile(status, pokemon) {
+			if (status.id === 'flinch') return null;
 		},
 		onDragOut(pokemon) {
 			// Immune to Roar, Whirlwind, Dragon Tail
