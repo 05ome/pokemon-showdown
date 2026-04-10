@@ -31,6 +31,17 @@ export const Items: import('../sim/dex-items').ItemDataTable = {
 		gen: 6,
 		isNonstandard: "Past",
 	},
+	typhlosionite: {
+		name: "Typhlosionite",
+		spritenum: 584,
+		megaStone: { "Typhlosion": "Typhlosion-Mega" },
+		itemUser: ["Typhlosion"],
+		onTakeItem(item, source) {
+			return !item.megaStone?.[source.baseSpecies.baseSpecies];
+		},
+		num: 999,
+		gen: 6,
+	},
 	absolite: {
 		name: "Absolite",
 		spritenum: 576,
