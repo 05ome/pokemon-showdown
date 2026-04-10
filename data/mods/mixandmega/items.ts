@@ -3,6 +3,10 @@ export const Items: import('../../../sim/dex-items').ModdedItemDataTable = {
 		inherit: true,
 		isNonstandard: null,
 	},
+	typhlosionite: {
+		inherit: true,
+		isNonstandard: null,
+	},
 	absolite: {
 		inherit: true,
 		isNonstandard: null,

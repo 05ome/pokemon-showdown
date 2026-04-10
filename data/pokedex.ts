@@ -3551,7 +3551,6 @@ export const Pokedex: import('../sim/dex-species').SpeciesDataTable = {
 		color: "Yellow",
 		eggGroups: ["Field"],
 		requiredItem: "Typhlosionite",
-		gen: 9,
 	},
 	typhlosionhisui: {
 		num: 157,
