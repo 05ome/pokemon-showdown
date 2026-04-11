@@ -6556,6 +6556,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 				this.boost({spa: 2}, pokemon, pokemon, null, true);
 			}
 		},
+		flags: {breakable: 1},
 		name: "Volcanic Core",
 		rating: 4.5,
 		num: -1013,
@@ -6614,4 +6615,157 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -1014,
 	},	
+	abyssalsovereignty: {
+		// 1. Sets Rain on Switch-in (Drizzle)
+		onStart(source) {
+			this.field.setWeather('raindance');
+		},
+		// 2. Swift Swim (Speed x2 in Rain)
+		onModifySpe(spe, pokemon) {
+			if (['raindance', 'primordialsea'].includes(pokemon.effectiveWeather())) {
+				return this.chainModify(2);
+			}
+		},
+		// 3. Sniper (Crits deal 2.25x damage instead of 1.5x)
+		onModifyDamage(damage, source, target, move) {
+			if (target.getMoveHitData(move).crit) {
+				this.debug('Sniper boost');
+				return this.chainModify(1.5);
+			}
+		},
+		// 4. Critical Hit Rate +2 Stages (50% base chance to crit)
+		onModifyCritRatio(critRatio, source, target) {
+			return critRatio + 2;
+		},
+		// 5. Water/Dragon ignore damage reduction (Reflect, Light Screen, Abilities)
+		onModifyMovePriority: 1,
+		onModifyMove(move, attacker, defender) {
+			if (move.type === 'Water' || move.type === 'Dragon') {
+				// Bypass Multiscale, Water Absorb, Storm Drain, etc.
+				move.ignoreAbility = true; 
+				// Bypass Reflect, Light Screen, and Aurora Veil
+				move.infiltrates = true;   
+			}
+		},
+		// 6. Heals 10% HP at the end of the turn in Rain
+		onWeather(target, source, effect) {
+			if (target.hasItem('utilityumbrella')) return;
+			if (effect.id === 'raindance' || effect.id === 'primordialsea') {
+				this.heal(target.baseMaxhp / 10);
+			}
+		},
+		flags: {},
+		name: "Abyssal Sovereignty",
+		rating: 5,
+		num: -1016,
+	},
+	artilleryfortress: {
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			move.accuracy = true; 
+			if (move.flags['protect']) delete move.flags['protect'];
+
+			// 2. ARTILLERY BUFFS: Targets Pulse, Beam, and Cannon moves
+			const isArtillery = move.flags['pulse'] || move.id.includes('beam') || move.id.includes('cannon');
+			if (isArtillery) {
+				// Pierces substitutes (Acts like Infiltrator)
+				move.infiltrates = true;
+
+				// Doubles secondary effect chances (like Scald or Dark Pulse)
+				if (move.secondaries) {
+					for (const secondary of move.secondaries) {
+						if (secondary.chance) {
+							secondary.chance *= 2;
+							// Caps it at 100% just in case
+							if (secondary.chance > 100) secondary.chance = 100;
+						}
+					}
+				}
+				// Also doubles effects applied to the user (like Meteor Beam SpA boost)
+				if (move.self?.chance) {
+					move.self.chance *= 2;
+					if (move.self.chance > 100) move.self.chance = 100;
+				}
+			}
+		},
+		onModifyAtkPriority: 5,
+		onModifyAtk(atk, attacker, defender, move) {
+			// 3. WATER-TYPE HP SCALING (Physical)
+			if (move.type === 'Water') {
+				const hpRatio = attacker.hp / attacker.maxhp;
+				if (hpRatio > 0.75) {
+					this.debug('Artillery Fortress High HP boost');
+					return this.chainModify(1.2);
+				} else if (hpRatio >= 0.5) {
+					this.debug('Artillery Fortress Mid HP boost');
+					return this.chainModify(1.5);
+				} else {
+					this.debug('Artillery Fortress Low HP boost');
+					return this.chainModify(2.0);
+				}
+			}
+		},
+		onModifySpAPriority: 5,
+		onModifySpA(spa, attacker, defender, move) {
+			// 3. WATER-TYPE HP SCALING (Special)
+			if (move.type === 'Water') {
+				const hpRatio = attacker.hp / attacker.maxhp;
+				if (hpRatio > 0.75) {
+					this.debug('Artillery Fortress High HP boost');
+					return this.chainModify(1.2);
+				} else if (hpRatio >= 0.5) {
+					this.debug('Artillery Fortress Mid HP boost');
+					return this.chainModify(1.5);
+				} else {
+					this.debug('Artillery Fortress Low HP boost');
+					return this.chainModify(2.0);
+				}
+			}
+		},
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			if (move.flags['pulse']) {
+				return this.chainModify(1.8);
+			}
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			this.debug('Artillery Fortress damage reduction');
+			return this.chainModify(0.65);
+		},
+		onDamagingHit(damage, target, source, move) {
+			if (this.checkMoveMakesContact(move, source, target, true)) {
+				this.damage(source.baseMaxhp / 6, source, target);
+			}
+		},
+		flags: {breakable: 1},
+		name: "Artillery Fortress",
+		rating: 5,
+		num: -1015,
+	},
+	superman:  {
+		onModifyDefPriority: 6,
+		onModifyDef(def) {
+			return this.chainModify(2);
+		},
+		onModifyAtkPriority: 6,
+		onModifyAtk(atk) {
+			return this.chainModify(2);
+		},
+		onModifySpAPriority: 6,
+		onModifySpA(spa) {
+			return this.chainModify(2);
+		},
+		onModifySpDPriority: 6,
+		onModifySpD(spd) {
+			return this.chainModify(2);
+		},
+		onModifySpePriority: 6,
+		onModifySpe(spe) {
+			return this.chainModify(2);
+		},
+		flags: {notrace: 1, failskillswap: 1},
+		name: "Superman",
+		rating: 5,
+		num: -777,
+	},
 };

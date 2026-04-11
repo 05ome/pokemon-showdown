@@ -481,6 +481,9 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			if (source?.hasItem('damprock')) {
 				return 8;
 			}
+			if (source?.hasAbility('abyssalsovereignty')){
+				return 30;
+			}
 			return 5;
 		},
 		onWeatherModifyDamage(damage, attacker, defender, move) {
