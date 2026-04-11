@@ -6515,5 +6515,103 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Heartscale",
 		rating: 5,
 		num: -136,
+	},
+	volcaniccore: {
+		onStart(pokemon) {
+			if (pokemon.m.eruptionTriggered === undefined) {
+				pokemon.m.eruptionTriggered = false; 
+			}
+		},
+		// 1. 🔥 MOLD BREAKER (FIRE-ONLY)
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			if (move.type === 'Fire') {
+				// This single flag tells the engine to bypass Flash Fire, Water Absorb, 
+				// Thick Fat, Well-Baked Body, and Storm Drain completely.
+				move.ignoreAbility = true;
+			}
+		},
+
+		// 2. 💧 SUPERHEATED BARRIER
+		onSourceModifyDamage(damage, source, target, move) {
+			if (move.type === 'Water') {
+				this.debug('Magma Core water damage reduction');
+				// Prints a cool custom message so the player knows why their Surf did zero damage
+				this.add('-message', `${target.name}'s intense heat vaporized the incoming water!`);
+				return this.chainModify(0.5);
+			}
+		},
+
+		// 3. 🌋 ERUPTION TRIGGER (Phase 2 Awakening)
+		onUpdate(pokemon) {
+			// Checks if HP is 50% or lower, making sure it isn't fainted, and checks the one-time lock
+			if (pokemon.hp <= pokemon.maxhp / 2 && pokemon.hp > 0 && !pokemon.m.eruptionTriggered) {
+				// Lock it so it only happens once per battle
+				pokemon.m.eruptionTriggered = true; 
+				
+				this.add('-ability', pokemon, 'Volcanic Core');
+				this.add('-message', `${pokemon.name}'s internal volcano erupted under the pressure!`);
+				
+				// Grants the +2 Special Attack boost
+				this.boost({spa: 2}, pokemon, pokemon, null, true);
+			}
+		},
+		name: "Volcanic Core",
+		rating: 4.5,
+		num: -1013,
+	},
+	spiritualflames: {
+		onStart(pokemon) {
+			// Initializes the one-time trigger lock
+			if (pokemon.m.soulAbsorptionTriggered === undefined) {
+				pokemon.m.soulAbsorptionTriggered = false; 
+			}
+		},
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			// 🕊️ TRANSCENDENT FLAMES (Type Piercing)
+			if (move.type === 'Ghost') {
+				// Allows Ghost moves to hit Normal types
+				if (!move.ignoreImmunity) move.ignoreImmunity = {};
+				if (move.ignoreImmunity !== true) {
+					move.ignoreImmunity['Ghost'] = true; 
+				}
+			}
+			if (move.type === 'Fire') {
+				// Fire moves bypass Flash Fire, Thick Fat, Heatproof, etc.
+				move.ignoreAbility = true;
+			}
+		},
+		onSourceHit(target, source, move) {
+			// 👁️ SOUL SEAR (Status Application)
+			if (!move || !target) return;
+			if (target !== source && target.hp > 0 && (move.type === 'Fire' || move.type === 'Ghost')) {
+				// 25% chance to trigger
+				if (this.randomChance(25, 100)) {
+					// Fails if the target is a Ghost-type
+					if (target.hasType('Ghost')) return;
+					
+					// Applies the custom volatile from conditions.ts
+					target.addVolatile('soulsear', source, move);
+				}
+			}
+		},
+		onSourceAfterFaint(length, target, source, effect) {
+			// ✨ SOUL ABSORPTION (Stat Boost on KO)
+			if (effect && effect.effectType === 'Move' && source === this.effectState.target) {
+				if (!source.m.soulAbsorptionTriggered) {
+					source.m.soulAbsorptionTriggered = true; // Locks it for the rest of the battle
+					
+					this.add('-ability', source, 'Spiritual Flames');
+					this.add('-message', `${source.name} absorbed the departing soul!`);
+					
+					// Grants +1 Sp. Atk and +1 Speed
+					this.boost({spa: 1, spe: 1}, source);
+				}
+			}
+		},
+		name: "Spiritual Flames",
+		rating: 5,
+		num: -1014,
 	},	
 };

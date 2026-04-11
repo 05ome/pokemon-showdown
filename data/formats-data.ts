@@ -1263,6 +1263,11 @@ export const FormatsData: import('../sim/dex-species').SpeciesFormatsDataTable =
 		doublesTier: "(DUU)",
 		natDexTier: "RU",
 	},
+	typhlosionmega: {
+		tier: "OU",
+		doublesTier: "(DUU)",
+		natDexTier: "OU",
+	},
 	typhlosionhisui: {
 		tier: "PU",
 		doublesTier: "DUU",

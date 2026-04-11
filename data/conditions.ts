@@ -669,6 +669,29 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			}
 		},
 	},
+	soulsear: {
+		name: 'Soul Sear',
+		noCopy: true, // Prevents it from being Baton Passed
+		onStart(pokemon, source, sourceEffect) {
+			this.add('-start', pokemon, 'Soul Sear', '[from] ability: Spiritual Flames', '[of] ' + source);
+			this.effectState.stageDrops = 0; // Internal counter for the Sp. Def drops
+		},
+		onResidualOrder: 10,
+		onResidualSubOrder: 20,
+		onResidual(pokemon) {
+			// Deals 1/8th max HP damage
+			this.damage(pokemon.baseMaxhp / 8);
+			
+			// Drops Sp. Def by 1 stage, strictly capping at 3 times
+			if (this.effectState.stageDrops < 3) {
+				this.boost({spd: -1}, pokemon);
+				this.effectState.stageDrops++;
+			}
+		},
+		onEnd(pokemon) {
+			this.add('-end', pokemon, 'Soul Sear');
+		},
+	},
 	sunnyday: {
 		name: 'SunnyDay',
 		effectType: 'Weather',
