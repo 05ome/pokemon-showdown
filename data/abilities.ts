@@ -6818,4 +6818,20 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -1017,
 	},
+	stormsovereign: {
+		onStart(pokemon) {
+			// 1. Sets standard Tailwind (Natively lasts exactly 4 turns)
+			if (!pokemon.side.getSideCondition('tailwind')) {
+				pokemon.side.addSideCondition('tailwind');
+			}
+			
+			// 2. Sets your custom 5-turn damage reduction barrier
+			if (!pokemon.side.getSideCondition('guardianbarrier')) {
+				pokemon.side.addSideCondition('guardianbarrier');
+			}
+		},
+		name: "Storm Sovereign",
+		rating: 5,
+		num: -1018,
+	},
 };
