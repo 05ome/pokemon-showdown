@@ -3234,6 +3234,17 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 0.5,
 		num: 53,
 	},
+	piercingdrill: {
+		isNonstandard: "Future",
+		onModifyMove(move) {
+			if (move.flags['contact']) delete move.flags['protect'];
+		},
+		// breaking protect handled in Battle#checkMoveBypassesProtect()
+		flags: {},
+		name: "Piercing Drill",
+		rating: 1,
+		num: 311,
+	},
 	pixilate: {
 		onModifyTypePriority: -1,
 		onModifyType(move, pokemon) {
@@ -4408,6 +4419,16 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Speed Boost",
 		rating: 4.5,
 		num: 3,
+	},
+	spicyspray: {
+		isNonstandard: "Future",
+		onDamagingHit(damage, target, source, move) {
+			source.trySetStatus('brn', target);
+		},
+		flags: {},
+		name: "Spicy Spray",
+		rating: 3,
+		num: 318,
 	},
 	stakeout: {
 		onModifyAtkPriority: 5,
