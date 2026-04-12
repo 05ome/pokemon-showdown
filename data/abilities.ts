@@ -6566,7 +6566,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		// 3. 🌋 ERUPTION TRIGGER (Phase 2 Awakening)
 		onUpdate(pokemon) {
 			// Checks if HP is 50% or lower, making sure it isn't fainted, and checks the one-time lock
-			if (pokemon.hp <= pokemon.maxhp / 2 && pokemon.hp > 0 && !pokemon.m.eruptionTriggered) {
+			if (pokemon.hp <= (3 * pokemon.maxhp / 4) && pokemon.hp > 0 && !pokemon.m.eruptionTriggered) {
 				// Lock it so it only happens once per battle
 				pokemon.m.eruptionTriggered = true; 
 				
@@ -6584,10 +6584,7 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	},
 	spiritualflames: {
 		onStart(pokemon) {
-			// Initializes the one-time trigger lock
-			if (pokemon.m.soulAbsorptionTriggered === undefined) {
-				pokemon.m.soulAbsorptionTriggered = false; 
-			}
+			pokemon.m.soulAbsorptionTriggered = false; 
 		},
 		onModifyMovePriority: 1,
 		onModifyMove(move) {
