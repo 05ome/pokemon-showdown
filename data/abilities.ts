@@ -6788,10 +6788,14 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 	},
 	sacredrebirth: {
 		onStart(pokemon) {
-			// 1. Applies the 5-turn Aura every time Ho-Oh switches in
-			pokemon.addVolatile('sacredaura');
+			// Loops through all active Pokémon on Ho-Oh's side of the field (Doubles/Triples)
+			for (const ally of pokemon.side.active) {
+				// Checks if the slot actually has a Pokémon in it and it isn't fainted
+				if (ally && !ally.fainted) {
+					ally.addVolatile('sacredaura');
+				}
+			}
 			
-			// 2. Initializes the one-time revive lock
 			if (pokemon.m.sacredReviveUsed === undefined) {
 				pokemon.m.sacredReviveUsed = false; 
 			}
