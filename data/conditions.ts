@@ -695,6 +695,38 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			this.add('-end', pokemon, 'Soul Sear');
 		},
 	},
+	sacredaura: {
+		name: 'Sacred Aura',
+		duration: 5,
+		onStart(pokemon) {
+			this.add('-start', pokemon, 'Sacred Aura', '[from] ability: Sacred Rebirth');
+			this.add('-message', `A brilliant, sacred aura surrounds ${pokemon.name}!`);
+		},
+		onResidualOrder: 5,
+		onResidualSubOrder: 4,
+		onResidual(pokemon) {
+			// Heals 1/8th of Max HP at the end of the turn
+			this.heal(pokemon.baseMaxhp / 8);
+		},
+		onSetStatus(status, target, source, effect) {
+			// Prevents Burn, Poison, Paralysis, Sleep, Freeze
+			if (status.id !== 'fnt') {
+				this.add('-immune', target, '[from] volatile: Sacred Aura');
+				return false;
+			}
+		},
+		onTryAddVolatile(status, target) {
+			// Prevents Yawn from making it fall asleep
+			if (status.id === 'yawn') {
+				this.add('-immune', target, '[from] volatile: Sacred Aura');
+				return null;
+			}
+		},
+		onEnd(pokemon) {
+			this.add('-end', pokemon, 'Sacred Aura');
+			this.add('-message', `The sacred aura protecting ${pokemon.name} faded away.`);
+		},
+	},
 	sunnyday: {
 		name: 'SunnyDay',
 		effectType: 'Weather',

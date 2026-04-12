@@ -6786,4 +6786,36 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		rating: 5,
 		num: -777,
 	},
+	sacredrebirth: {
+		onStart(pokemon) {
+			// 1. Applies the 5-turn Aura every time Ho-Oh switches in
+			pokemon.addVolatile('sacredaura');
+			
+			// 2. Initializes the one-time revive lock
+			if (pokemon.m.sacredReviveUsed === undefined) {
+				pokemon.m.sacredReviveUsed = false; 
+			}
+		},
+		onDamagePriority: -100,
+		onDamage(damage, target, source, effect) {
+			// 3. THE REVIVE: Checks if damage is lethal and if the revive is unused
+			if (damage >= target.hp && !target.m.sacredReviveUsed) {
+				
+				// Locks the revive so it only happens once per battle
+				target.m.sacredReviveUsed = true; 
+				
+				this.add('-ability', target, 'Sacred Rebirth');
+				this.add('-message', `${target.name} rose from its own ashes!`);
+				
+				// Heals Ho-Oh to exactly 50% of its Max HP
+				this.heal(target.maxhp / 2, target, target); 
+				
+				// Returning 0 absorbs the killing blow completely
+				return 0; 
+			}
+		},
+		name: "Sacred Rebirth",
+		rating: 5,
+		num: -1017,
+	},
 };
