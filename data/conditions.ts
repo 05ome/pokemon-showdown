@@ -730,19 +730,17 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 	guardianbarrier: {
 		name: 'Guardian Barrier',
 		duration: 5,
-		onStart(side) {
+		onSideStart(side) {
 			this.add('-sidestart', side, 'Guardian Barrier');
 			this.add('-message', `A mystical barrier surrounded ${side.name}'s team!`);
 		},
 		onAnyModifyDamage(damage, source, target, move) {
-			// Checks if the Pokémon taking damage is on the side protected by the barrier
 			if (target !== source && target.side === this.effectState.target) {
 				this.debug('Guardian Barrier damage reduction');
-				// Reduces damage by 25% (Multiplier of 0.75)
 				return this.chainModify(0.75); 
 			}
 		},
-		onEnd(side) {
+		onSideEnd(side) {
 			this.add('-sideend', side, 'Guardian Barrier');
 			this.add('-message', `The mystical barrier protecting the team faded away.`);
 		},
