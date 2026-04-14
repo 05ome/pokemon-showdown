@@ -745,6 +745,48 @@ export const Conditions: import('../sim/dex-conditions').ConditionDataTable = {
 			this.add('-message', `The mystical barrier protecting the team faded away.`);
 		},
 	},
+	voidfreeze: {
+		name: 'Void Freeze',
+		noCopy: true,
+		onStart(pokemon, source, sourceEffect) {
+			this.add('-start', pokemon, 'Void Freeze', '[from] ability: Absolute Zero', '[of] ' + source);
+			this.add('-message', `The biting cold of the void latched onto ${pokemon.name}!`);
+		},
+		onResidualOrder: 10,
+		onResidualSubOrder: 20,
+		onResidual(pokemon) {
+			// 1. Deals 1/8th max HP damage
+			this.damage(pokemon.baseMaxhp / 8);
+
+			// 2. Dissolves positive stat boosts
+			// We dynamically check all stats and only drop the ones that are currently boosted
+			const boostsToDrop: {[k: string]: number} = {};
+			let hasBoosts = false;
+			let i: BoostID;
+			for (i in pokemon.boosts) {
+				// Only targets positive boosts so it doesn't plunge them into negative numbers unnecessarily
+				if (pokemon.boosts[i] > 0) {
+					boostsToDrop[i] = -1;
+					hasBoosts = true;
+				}
+			}
+			if (hasBoosts) {
+				this.boost(boostsToDrop, pokemon);
+				this.add('-message', `${pokemon.name}'s strength is dissolving into the void!`);
+			}
+		},
+		onBeforeMovePriority: 9,
+		onBeforeMove(pokemon, target, move) {
+			// 3. THE CURE: If the afflicted Pokémon attempts to use a Fire-type move
+			if (move.type === 'Fire') {
+				pokemon.removeVolatile('voidfreeze');
+				this.add('-message', `The fiery heat shattered the Void Freeze!`);
+			}
+		},
+		onEnd(pokemon) {
+			this.add('-end', pokemon, 'Void Freeze');
+		},
+	},
 	sunnyday: {
 		name: 'SunnyDay',
 		effectType: 'Weather',

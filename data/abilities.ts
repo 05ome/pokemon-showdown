@@ -5779,12 +5779,12 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		},
 		onSourceModifyDamage(damage, source, target, move) {
 			// Checks if Infernape is in Iron (1) or Void (2) stance
-			if (target.m.wukongStance === 0 || target.m.wukongStance === 1) {
+			if (target.m.wukongStance === 0 || target.m.wukongStance === 1 || target.m.wukongStance == 2) {
 				// This prints to the actual battle chat so you know it triggered
 				this.add('-message', `${target.name}'s Stance softened the blow!`);
 				
 				// Stacks perfectly with other multipliers
-				return this.chainModify(0.5); 
+				return this.chainModify(0.25); 
 			}
 		},
 		onResidualOrder: 28,
@@ -6837,5 +6837,190 @@ export const Abilities: import('../sim/dex-abilities').AbilityDataTable = {
 		name: "Storm Sovereign",
 		rating: 5,
 		num: -1018,
+	},
+	imperialscales: {
+		onStart(pokemon) {
+			// 1. THE AWAKENING: Grants +1 Atk, Def, and Spe immediately on switch-in
+			this.add('-ability', pokemon, 'Imperial Scales');
+			this.boost({atk: 1, def: 1, spe: 1}, pokemon);
+		},
+		onSourceModifyDamage(damage, source, target, move) {
+			// 2. THE ARMOR: Checks current HP to determine which multiplier to use
+			
+			// If at 100% HP (Standard Multiscale: takes 50% damage)
+			if (target.hp >= target.maxhp) {
+				this.debug('Imperial Scales full HP weaken');
+				this.add('-message', `${target.name}'s flawless scales absorbed the blow!`);
+				return this.chainModify(0.1); 
+			} 
+			// If below 100% HP (Permanent Filter: takes 75% damage)
+			else {
+				this.debug('Imperial Scales damaged weaken');
+				// Optional: You can remove this chat message if it gets too spammy every turn
+				this.add('-message', `${target.name}'s hardened scales reduced the impact!`);
+				return this.chainModify(0.5); 
+			}
+		},
+		name: "Imperial Scales",
+		rating: 5,
+		num: -1019,
+	},
+	apocalypticblight: {
+		// 1. ☠️ INFINITE TOXIC: Badly poisons all foes on switch-in, bypassing immunity
+		onStart(pokemon) {
+			let activated = false;
+			for (const foe of pokemon.foes()) {
+				// Fails only if they are already badly poisoned or fainted
+				if (!foe.fainted && foe.status !== 'tox') {
+					// The 'true' at the end forces the status, ignoring Type and Ability immunities!
+						if (foe.setStatus('tox', pokemon, this.effect, true)) {	
+							activated = true;
+					}
+				}
+			}
+			if (activated) {
+				this.add('-ability', pokemon, 'Apocalyptic Blight');
+				this.add('-message', `A world-ending toxic miasma consumed the field!`);
+			}
+		},
+		
+		// 2. 💥 PUNISHMENT: Targets take 1.5x damage from Eternatus...
+		onModifyDamage(damage, source, target, move) {
+			if (target.status === 'psn' || target.status === 'tox') {
+				this.debug('Apocalyptic Blight damage boost');
+				return this.chainModify(1.5);
+			}
+		},
+		// ...and take 1.5x damage from Eternatus's allies (if playing Doubles/Triples)
+		onAllyModifyDamage(damage, source, target, move) {
+			if (target.status === 'psn' || target.status === 'tox') {
+				this.debug('Apocalyptic Blight ally damage boost');
+				return this.chainModify(1.5);
+			}
+		},
+
+		// 3. 🩸 PARASITIC HEAL: Heals 20% HP per poisoned opponent at the end of the turn
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		onResidual(pokemon) {
+			let poisonedFoes = 0;
+			// Loops through all active opponents and counts how many are poisoned
+			for (const foe of pokemon.foes()) {
+				if (foe.status === 'psn' || foe.status === 'tox') {
+					poisonedFoes++;
+				}
+			}
+			if (poisonedFoes > 0 && pokemon.hp < pokemon.maxhp) {
+				this.add('-ability', pokemon, 'Apocalyptic Blight');
+				
+				// pokemon.baseMaxhp / 5 is exactly 20%. Multiplied by the number of poisoned foes.
+				this.heal((pokemon.baseMaxhp / 5) * poisonedFoes);
+				this.add('-message', `${pokemon.name} absorbed the life force of the poisoned targets!`);
+			}
+		},
+
+		// 4. ✨ IMMORTAL BODY: Automatically cures and prevents all status conditions
+		onUpdate(pokemon) {
+			// If it somehow gets statused, it instantly wipes it
+			if (pokemon.status) {
+				this.add('-activate', pokemon, 'ability: Apocalyptic Blight');
+				pokemon.cureStatus();
+				this.add('-message', `${pokemon.name}'s alien biology eradicated the affliction!`);
+			}
+		},
+		onSetStatus(status, target, source, effect) {
+			// Prevents statuses from applying in the first place (like Spore or Will-O-Wisp)
+			if (effect?.status) {
+				this.add('-immune', target, '[from] ability: Apocalyptic Blight');
+			}
+			return false;
+		},
+
+		name: "Apocalyptic Blight",
+		rating: 5,
+		num: -1020,
+	},
+	cataclysmdrive: {
+		onModifyMovePriority: 1,
+		onModifyMove(move) {
+			// 1. IGNORE ABILITIES (Mold Breaker)
+			move.ignoreAbility = true;
+			
+			// 2. IGNORE DEFENSIVE BOOSTS (Acts like Sacred Sword)
+			// Ignores target's Defense/Sp. Def boosts and Evasion boosts
+			move.ignoreDefensive = true;
+			move.ignoreEvasion = true; 
+			
+			// 3. IGNORE DAMAGE REDUCTION (Infiltrator)
+			// Bypasses Reflect, Light Screen, and Aurora Veil
+			move.infiltrates = true;
+
+			// 5. CONTACT IMMUNITY
+			if (move.flags['contact']) {
+				// Deletes the contact flag (Acts like Protective Pads / Long Reach)
+				// This completely prevents Rocky Helmet, Rough Skin, Static, Flame Body, etc.
+				delete move.flags['contact'];
+				
+				// Deletes the move's own secondary effects (Acts like Sheer Force)
+				// This ensures the move is a pure nuke with no extra stat-drop/status rolls
+				if (move.secondaries) {
+					delete move.secondaries;
+				}
+			}
+		},
+		onDamage(damage, target, source, effect) {
+			// 5b. RECOIL IMMUNITY (Rock Head)
+			// Prevents recoil damage from moves like Wild Charge or Flare Blitz
+			if (effect.id === 'recoil') {
+				if (!this.activeMove) throw new Error("Battle.activeMove is null");
+				if (this.activeMove.id !== 'struggle') return null;
+			}
+		},
+		onBasePowerPriority: 19,
+		onBasePower(basePower, attacker, defender, move) {
+			// 4. ELECTRIC SURGE (+50% Power to Electric moves)
+			if (move.type === 'Electric') {
+				this.debug('Cataclysm Drive boost');
+				return this.chainModify(1.5);
+			}
+		},
+		name: "Cataclysm Drive",
+		rating: 5,
+		num: -1021,
+	},
+	absolutezero: {
+		// 1. 🌫️ ABSOLUTE ZERO AURA (Ambient Damage)
+		onResidualOrder: 28,
+		onResidualSubOrder: 2,
+		onResidual(pokemon) {
+			let activated = false;
+			for (const foe of pokemon.foes()) {
+				// Bypasses Substitutes, Protect, and Abilities natively by using direct damage
+				if (!foe.fainted) {
+					this.damage(foe.baseMaxhp / 12, foe, pokemon);
+					activated = true;
+				}
+			}
+			if (activated) {
+				this.add('-message', `The ambient absolute zero aura sapped the opponents' life force!`);
+			}
+		},
+
+		// 2. ❄️ VOID FREEZE (Application)
+		onSourceHit(target, source, move) {
+			if (!move || !target) return;
+			
+			// Checks if the move is Ice-type and actually dealt damage
+			if (target !== source && target.hp > 0 && move.type === 'Ice' && move.category !== 'Status') {
+				
+				// Standard Ice-types are immune to being frozen
+				if (!target.hasType('Ice')) {
+					target.addVolatile('voidfreeze', source, move);
+				}
+			}
+		},
+		name: "Absolute Zero",
+		rating: 5,
+		num: -1022,
 	},
 };
